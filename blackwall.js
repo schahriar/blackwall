@@ -71,7 +71,7 @@ blackwall.prototype.lookup = function(ip) {
         // Lookup ip (probably not the fastest method)
         if(list.members[ip]){
             // Assign location and rule to lookup object
-            lookup = { location: list.members[ip], this.policy.rules[list.name]};
+            lookup = { location: list.members[ip], rule: this.policy.rules[list.name]};
             // break the loop
             return false;
 	}
