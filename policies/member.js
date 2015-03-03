@@ -1,3 +1,3 @@
 module.exports = {
-    rate: new Object
+    rate: new Array
 }
