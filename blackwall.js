@@ -6,6 +6,7 @@ var util = require("util");
 /// Packaged Policies
 var defaultPolicy = require("./policies/default");
 var newPolicy = require("./policies/new");
+var newMember = require("./policies/member");
 ///
 
 var blackwall = function(policy) {
@@ -25,10 +26,10 @@ blackwall.prototype.addList = function(name, rule, force) {
     var name = name.toLowerCase();
 
     // If policy exists and list is not forced
-    if((this.policy[name])&&(!force)) return { error: "List already exists! \n Lists are not case-sensitive." };
+    if((this.policy.lists[name])&&(!force)) return { error: "List already exists! \n Lists are not case-sensitive." };
 
     // Create new list
-    this.policy[name] = {
+    this.policy.lists[name] = {
         name: name,
         members: new Object
     }
@@ -42,7 +43,7 @@ blackwall.prototype.addMember = function(list, ip) {
     var list = list.toLowerCase();
 
     // If list does not exist
-    if(!this.policy[list]) return { error: "List not found!" };
+    if(!this.policy.lists[list]) return { error: "List not found!" };
 
     // Check if ip-address is invalid (accepts both v4 and v6 ips)
     if(!ipaddr.isValid(ip)) return { error: "Invalid ip address!" };
@@ -50,7 +51,7 @@ blackwall.prototype.addMember = function(list, ip) {
     // Expand ipv6 address
     ip = ipaddr.parse(ip).toNormalizedString();
 
-    this.policy[list].members[ip] = new Object;
+    this.policy.lists[list].members[ip] = newMember;
 }
 
 blackwall.prototype.enforce = function(method) {

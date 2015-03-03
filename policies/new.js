@@ -1,9 +1,11 @@
 module.exports = {
     name: undefined,
-    
-    global: { name: 'global', members: new Object },
-    blackList: { name: 'blackList', members: new Object },
-    whiteList: { name: 'whiteList', members: new Object },
 
-    policies: new Object,
+    lists : {
+        global: { name: 'global', members: new Object },
+        blacklist: { name: 'blacklist', members: new Object },
+        whitelist: { name: 'whitelist', members: new Object }
+    }
+
+    policies: new Object
 }
