@@ -21,7 +21,7 @@ blackwall.prototype.createPolicy = function(name, policy) {
     this.policy = _.defaults(newPolicy, policy, { name: name });
 }
 
-blackwall.prototype.addList = function(name, rule, force) {
+blackwall.prototype.addList = function(name, rule, priority, force) {
     // Convert list name to lowercase
     var name = name.toLowerCase();
 
@@ -31,6 +31,7 @@ blackwall.prototype.addList = function(name, rule, force) {
     // Create new list
     this.policy.lists[name] = {
         name: name,
+        priority: priority || 0.1,
         members: new Object
     }
 
@@ -52,6 +53,10 @@ blackwall.prototype.addMember = function(list, ip) {
     ip = ipaddr.parse(ip).toNormalizedString();
 
     this.policy.lists[list].members[ip] = newMember;
+}
+
+blackwall.prototype.lookup = function(ip) {
+    /* Lookup function */
 }
 
 blackwall.prototype.enforce = function(method) {
