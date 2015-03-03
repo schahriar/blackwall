@@ -6,7 +6,7 @@ module.exports = {
     rules: {
         global: {
             rate: { d:undefined, h:undefined, m:30 }
-        }
+        },
         blackList: {
             rate: { d:0, h:undefined, m:undefined }
         },
