@@ -9,7 +9,7 @@ var newPolicy = require("./policies/new");
 
 var blackwall = function(policy) {
     // Set memory-stored policy to either passed policy or default
-    this.policy = policyObj || defaultPolicy;
+    this.policy = policy || defaultPolicy;
     eventEmmiter.call(this);
 }
 
