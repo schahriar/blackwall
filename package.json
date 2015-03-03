@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/schahriar/blackwall",
   "dependencies": {
+    "ipaddr.js": "^0.1.8",
     "lodash": "^3.3.1"
   }
 }
