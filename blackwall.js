@@ -61,7 +61,7 @@ blackwall.prototype.lookup = function(ip) {
 }
 
 blackwall.prototype.admit = function(ip) {
-    return methods.admit.apply(this, [methods.lookup.apply(this, [ip])]);
+    return methods.auto.apply(this, [ip]);
 }
 
 blackwall.prototype.enforce = function(method) {
