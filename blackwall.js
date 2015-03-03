@@ -38,6 +38,8 @@ blackwall.prototype.addList = function(name, rule, priority, force) {
 
     // Assign rule
     this.policy.rules[name] = rule;
+
+    return this.policy.lists[name];
 }
 
 blackwall.prototype.addMember = function(list, ip) {
