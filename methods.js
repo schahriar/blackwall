@@ -49,9 +49,9 @@ var admit = function(lookup) {
 
     // Foreach access granted time
     _.each(lookup.location.rate, function(accessTime) {
-        if((rateRule.d) && (moment(accessTime).diff(moment(), 'days') <= 1 ) rateTotal.d += 1;
-        if((rateRule.h) && (moment(accessTime).diff(moment(), 'hours') <= 1 ) rateTotal.h += 1;
-        if((rateRule.m) && (moment(accessTime).diff(moment(), 'minutes') <= 1 ) rateTotal.m += 1;
+        if((rateRule.d) && (moment(accessTime).diff(moment(), 'days') <= 1 )) rateTotal.d += 1;
+        if((rateRule.h) && (moment(accessTime).diff(moment(), 'hours') <= 1 )) rateTotal.h += 1;
+        if((rateRule.m) && (moment(accessTime).diff(moment(), 'minutes') <= 1 )) rateTotal.m += 1;
     })
 
     // Log for testing
