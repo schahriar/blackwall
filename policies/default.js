@@ -9,15 +9,15 @@ module.exports = {
 
     rules: {
         global: {
-            rate: { d:undefined, h:undefined, m:30 },
+            rate: { d:undefined, h:undefined, m:undefined, s:30 },
             block: false
         },
         blacklist: {
-            rate: { d:0, h:undefined, m:undefined },
+            rate: { d:0, h:undefined, m:undefined, s:undefined },
             block: true
         },
         whitelist: {
-            rate: { d:undefined, h:undefined, m:120 },
+            rate: { d:undefined, h:undefined, m:undefined, s:120 },
             block: false
         }
     }
