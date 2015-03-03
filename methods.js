@@ -66,10 +66,10 @@ var push = function(lookup) {
 }
 
 var auto = function(ip) {
-    var lookup = lookup(ip);
-    if(admit(lookup)) push(lookup);
+    var _lookup = lookup(ip);
+    if(admit(_lookup)) push(_lookup);
 
-    return admit(lookup);
+    return admit(_lookup);
 }
 
 module.exports = {
