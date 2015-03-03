@@ -1,3 +1,6 @@
+var _ = require("lodash");
+var ipaddr = require('ipaddr.js');
+
 module.exports = {
     lookup: function(ip) {
         /* Lookup function */
