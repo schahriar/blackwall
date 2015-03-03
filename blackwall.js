@@ -60,6 +60,10 @@ blackwall.prototype.lookup = function(ip) {
     return methods.lookup.apply(this, [ip]);
 }
 
+blackwall.prototype.admit = function(ip) {
+    return methods.admit.apply(this, [methods.lookup.apply(this, [ip])]);
+}
+
 blackwall.prototype.enforce = function(method) {
 
 }
