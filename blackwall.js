@@ -47,6 +47,9 @@ blackwall.prototype.addMember = function(list, ip) {
     // Check if ip-address is invalid (accepts both v4 and v6 ips)
     if(!ipaddr.isValid(ip)) return { error: "Invalid ip address!" };
 
+    // Expand ipv6 address
+    ip = ipaddr.parse(ip).toNormalizedString();
+
     this.policy[list].members[ip] = new Object;
 }
 
