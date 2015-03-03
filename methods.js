@@ -42,20 +42,23 @@ var admit = function(lookup) {
     /* Rate limiting function */
 
     var rateRule = lookup.rule.rate;
-    var rateTotal = { h:0, m:0, s:0 };
+    var rateTotal = { d:0, h:0, m:0 };
 
     // If any rates are set to 0
-    if((rateRule.h === 0) || (rateRule.m === 0) || (rateRule.s === 0)) return false;
+    if((rateRule.d === 0) || (rateRule.h === 0) || (rateRule.m === 0)) return false;
 
     // Foreach access granted time
     _.each(lookup.location.rate, function(accessTime) {
+        if((rateRule.d) && (moment(accessTime).isBetween(moment().subtract(1, 'days'), moment(), 'day'))) rateTotal.d += 1;
         if((rateRule.h) && (moment(accessTime).isBetween(moment().subtract(1, 'hours'), moment(), 'hour'))) rateTotal.h += 1;
         if((rateRule.m) && (moment(accessTime).isBetween(moment().subtract(1, 'minutes'), moment(), 'minute'))) rateTotal.m += 1;
-        if((rateRule.s) && (moment(accessTime).isBetween(moment().subtract(1, 'seconds'), moment(), 'second'))) rateTotal.s += 1;
     })
 
+    // Log for testing
+    console.log(rateTotal);
+
     // If rate exceeds the limit
-    if((rateRule.h < rateTotal.h) || (rateRule.m < rateTotal.m) || (rateRule.s < rateTotal.s)) return false;
+    if((rateRule.d < rateTotal.d) || (rateRule.h < rateTotal.h) || (rateRule.m < rateTotal.m)) return false;
 
     // Otherwise
     return true;
