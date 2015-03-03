@@ -62,16 +62,22 @@ blackwall.prototype.lookup = function(ip) {
 
     // Sort by priority
     var lists = _.sortBy(this.policy.lists, function(item){ return -item.priority; });
-    var rule = undefined;
 
+    // Define lookup variable
+    var lookup = undefined;
+
+    // Go through each list in order
     _.each(lists, function(list) {
+        // Lookup ip (probably not the fastest method)
         if(list.members[ip]){
-            rule = list.members[ip];
+            // Assign location and rule to lookup object
+            lookup = { location: list.members[ip], this.policy.rules[list.name]};
+            // break the loop
             return false;
 	}
     });
 
-    return rule;
+    return lookup;
 }
 
 blackwall.prototype.enforce = function(method) {
