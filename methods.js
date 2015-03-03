@@ -13,7 +13,7 @@ var lookup = function(ip) {
     ip = ipaddr.parse(ip).toNormalizedString();
 
     // Sort by priority
-    var lists = _.sortBy(this.policy.lists, function(item){ return -item.priority; });
+    var lists = _.sortBy(_this.policy.lists, function(item){ return -item.priority; });
 
     // Define lookup variable
     var lookup = undefined;
