@@ -48,14 +48,14 @@ var admit = function(lookup) {
     if((rateRule.d === 0) || (rateRule.h === 0) || (rateRule.m === 0)) return false;
 
     // Foreach access granted time
-    _.each(lookup.location.rate, function(accessTime) {
+    _.each(lookup.location.rate, function(accessTime, key) {
         if((rateRule.d) && (moment(accessTime).diff(moment(), 'days') <= 1 )) rateTotal.d += 1;
+            else lookup.location.rate.splice(key, 1); // Drop accessTime
         if((rateRule.h) && (moment(accessTime).diff(moment(), 'hours') <= 1 )) rateTotal.h += 1;
+            else if(!rateRule.d) lookup.location.rate.splice(key, 1); // Drop accessTime
         if((rateRule.m) && (moment(accessTime).diff(moment(), 'minutes') <= 1 )) rateTotal.m += 1;
-    })
-
-    // Log for testing
-    console.log(rateTotal);
+            else if((!rateRule.d)&&(!rateRule.h)) lookup.location.rate.splice(key, 1); // Drop accessTime
+    });
 
     // If rate exceeds the limit
     if((rateRule.d < rateTotal.d) || (rateRule.h < rateTotal.h) || (rateRule.m < rateTotal.m)) return false;
