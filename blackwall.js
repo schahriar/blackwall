@@ -57,6 +57,10 @@ blackwall.prototype.addMember = function(list, ip) {
 
 blackwall.prototype.lookup = function(ip) {
     /* Lookup function */
+    // Sort by priority
+    var lists = _.sortBy(this.policy.lists, 'priority');
+    // Log lists for testing
+    console.log(lists);
 }
 
 blackwall.prototype.enforce = function(method) {
