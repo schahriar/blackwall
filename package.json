@@ -1,0 +1,29 @@
+{
+  "name": "blackwall",
+  "version": "0.1.0",
+  "description": "An application layer firewall for NodeJS",
+  "main": "blackwall.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/schahriar/blackwall.git"
+  },
+  "keywords": [
+    "Firewall",
+    "blacklist",
+    "blackwall",
+    "application-layer",
+    "firewall"
+  ],
+  "author": "Schahriar SaffarShargh <info@schahriar.com> (http://schahriar.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/schahriar/blackwall/issues"
+  },
+  "homepage": "https://github.com/schahriar/blackwall",
+  "dependencies": {
+    "lodash": "^3.3.1"
+  }
+}
