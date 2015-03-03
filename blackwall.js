@@ -1,4 +1,5 @@
 var _ = require("lodash");
+var ipaddr = require('ipaddr.js');
 var eventEmmiter = require('events').EventEmitter;
 var util = require("util");
 
@@ -42,6 +43,9 @@ blackwall.prototype.addMember = function(list, ip) {
 
     // If list does not exist
     if(!this.policy[list]) return { error: "List not found!" };
+
+    // Check if ip-address is invalid (accepts both v4 and v6 ips)
+    if(!ipaddr.isValid(ip)) return { error: "Invalid ip address!" };
 
     this.policy[list].members[ip] = new Object;
 }
