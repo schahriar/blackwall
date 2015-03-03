@@ -20,8 +20,11 @@ blackwall.prototype.createPolicy = function(name, policy) {
 }
 
 blackwall.prototype.addList = function(name, rule, force) {
+    // Convert list name to lowercase
+    var name = name.toLowerCase();
+
     // If policy exists and list is not forced
-    if((this.policy[name])&&(!force)) return { error: "List already exists!" };
+    if((this.policy[name])&&(!force)) return { error: "List already exists! \n Lists are not case-sensitive." };
 
     // Create new list
     this.policy[name] = {
@@ -34,6 +37,9 @@ blackwall.prototype.addList = function(name, rule, force) {
 }
 
 blackwall.prototype.addMember = function(list, ip) {
+    // Convert list name to lowercase
+    var list = list.toLowerCase();
+
     // If list does not exist
     if(!this.policy[list]) return { error: "List not found!" };
 

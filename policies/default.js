@@ -1,16 +1,16 @@
 module.exports = {
     name: 'default',
-    blackList: { name: 'blackList', members: new Object },
-    whiteList: { name: 'whiteList', members: new Object },
+    blacklist: { name: 'blacklist', members: new Object },
+    whitelist: { name: 'whitelist', members: new Object },
 
     rules: {
         global: {
             rate: { d:undefined, h:undefined, m:30 }
         },
-        blackList: {
+        blacklist: {
             rate: { d:0, h:undefined, m:undefined }
         },
-        whiteList: {
+        whitelist: {
             rate: { d:undefined, h:undefined, m:120 }
         }
     }
