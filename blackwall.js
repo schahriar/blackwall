@@ -57,6 +57,7 @@ blackwall.prototype.addMember = function(list, ip) {
 
 blackwall.prototype.lookup = function(ip) {
     /* Lookup function */
+    var _this = this;
     // Expand ipv6 address
     ip = ipaddr.parse(ip).toNormalizedString();
 
@@ -71,7 +72,7 @@ blackwall.prototype.lookup = function(ip) {
         // Lookup ip (probably not the fastest method)
         if(list.members[ip]){
             // Assign location and rule to lookup object
-            lookup = { location: list.members[ip], rule: this.policy.rules[list.name]};
+            lookup = { location: list.members[ip], rule: _this.policy.rules[list.name]};
             // break the loop
             return false;
 	}
