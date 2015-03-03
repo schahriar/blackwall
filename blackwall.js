@@ -57,10 +57,21 @@ blackwall.prototype.addMember = function(list, ip) {
 
 blackwall.prototype.lookup = function(ip) {
     /* Lookup function */
+    // Expand ipv6 address
+    ip = ipaddr.parse(ip).toNormalizedString();
+
     // Sort by priority
-    var lists = _.sortBy(this.policy.lists, 'priority');
-    // Log lists for testing
-    console.log(lists);
+    var lists = _.sortBy(this.policy.lists, function(item){ return -item.priority; });
+    var rule = undefined;
+
+    _.each(lists, function(list) {
+        if(list.members[ip]){
+            rule = list.members[ip];
+            return false;
+	}
+    });
+
+    return rule;
 }
 
 blackwall.prototype.enforce = function(method) {
