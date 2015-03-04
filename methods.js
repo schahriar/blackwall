@@ -2,9 +2,17 @@ var _ = require("lodash");
 var ipaddr = require('ipaddr.js');
 var moment = require('moment');
 
+/// Packaged Policies
+var defaultPolicy = require("./policies/default");
+var newPolicy = require("./policies/new");
+var newMember = require("./policies/member");
+///
+
 var lookup = function(ip) {
     /* Lookup function */
     var _this = this;
+    // Check if ip-address is invalid (accepts both v4 and v6 ips)
+    if(!ipaddr.isValid(ip)) return { error: "Invalid ip address!" };
     // Expand ipv6 address
     ip = ipaddr.parse(ip).toNormalizedString();
 
@@ -16,8 +24,10 @@ var lookup = function(ip) {
 
     // Go through each list in order
     _.each(lists, function(list) {
+        // If * is true add ip to list
+        if(list['*']) list.members[ip] = newMember;
         // Lookup ip (probably not the fastest method)
-        if(list.members[ip]){
+        if(list.members[ip]) {
             // Assign location and rule to lookup object
             lookup = { location: list.members[ip], rule: _this.policy.rules[list.name]};
             // break the loop
