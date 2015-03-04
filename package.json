@@ -4,18 +4,19 @@
   "description": "An application layer firewall for NodeJS",
   "main": "blackwall.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/schahriar/blackwall.git"
   },
   "keywords": [
-    "Firewall",
+    "firewall",
     "blacklist",
     "blackwall",
+    "security",
     "application-layer",
-    "firewall"
+    "express-firewall"
   ],
   "author": "Schahriar SaffarShargh <info@schahriar.com> (http://schahriar.com/)",
   "license": "MIT",
