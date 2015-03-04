@@ -2,10 +2,6 @@ var _ = require("lodash");
 var ipaddr = require('ipaddr.js');
 var moment = require('moment');
 
-/*
-    TODO: Add ~async~ module and make all methods async
-*/
-
 var lookup = function(ip) {
     /* Lookup function */
     var _this = this;
@@ -42,23 +38,25 @@ var admit = function(lookup) {
     /* Rate limiting function */
 
     var rateRule = lookup.rule.rate;
-    var rateTotal = { d:0, h:0, m:0 };
+    var rateTotal = { d:0, h:0, m:0, s:0 };
 
     // If any rates are set to 0
-    if((rateRule.d === 0) || (rateRule.h === 0) || (rateRule.m === 0)) return false;
+    if((rateRule.d === 0) || (rateRule.h === 0) || (rateRule.m === 0) || (rateRule.s === 0)) return false;
 
     // Foreach access granted time
     _.each(lookup.location.rate, function(accessTime, key) {
-        if((rateRule.d) && (moment(accessTime).diff(moment(), 'days') <= 1 )) rateTotal.d += 1;
-            else if((rateRule.d) lookup.location.rate.splice(key, 1); // Drop accessTime
-        if((rateRule.h) && (moment(accessTime).diff(moment(), 'hours') <= 1 )) rateTotal.h += 1;
-            else if((rateRule.h) && (!rateRule.d)) lookup.location.rate.splice(key, 1); // Drop accessTime
-        if((rateRule.m) && (moment(accessTime).diff(moment(), 'minutes') <= 1 )) rateTotal.m += 1;
-            else if((rateRule.m) && (!rateRule.d)&&(!rateRule.h)) lookup.location.rate.splice(key, 1); // Drop accessTime
+        if((rateRule.d) && (moment(accessTime).diff(moment(), 'days') >= 0 )) rateTotal.d += 1;
+            else if (rateRule.d) lookup.location.rate.splice(key, 1); // Drop accessTime
+        if((rateRule.h) && (moment(accessTime).diff(moment(), 'hours') >= 0 )) rateTotal.h += 1;
+            else if ((rateRule.h) && (!rateRule.d)) lookup.location.rate.splice(key, 1); // Drop accessTime
+        if((rateRule.m) && (moment(accessTime).diff(moment(), 'minutes') >= 0 )) rateTotal.m += 1;
+            else if ((rateRule.m) && (!rateRule.h) && (!rateRule.d)) lookup.location.rate.splice(key, 1); // Drop accessTime
+        if((rateRule.s) && (moment(accessTime).diff(moment(), 'seconds') >= 0 )) rateTotal.s += 1;
+            else if ((rateRule.s) && (!rateRule.m) && (!rateRule.h) && (!rateRule.d)) lookup.location.rate.splice(key, 1); // Drop accessTime
     });
 
     // If rate exceeds the limit
-    if((rateRule.d < rateTotal.d) || (rateRule.h < rateTotal.h) || (rateRule.m < rateTotal.m)) return false;
+    if((rateRule.d < rateTotal.d) || (rateRule.h < rateTotal.h) || (rateRule.m < rateTotal.m) || (rateRule.s < rateTotal.s)) return false;
 
     // Otherwise
     return true;
