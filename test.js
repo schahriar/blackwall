@@ -12,12 +12,14 @@ var policies = firewall.policy;
 
 var ipv6 = {
     valid: "2001:0db8::0001",
+    validAlt: "fdb3:837:c302::48",
     expanded: "2001:db8:0:0:0:0:0:1",
     invalid: "4001:0db8:::0001"
 }
 
 var list = {
     valid: "global",
+    ALLed: "global",
     invalid: "DNE",
     case: "blackList"
 }
@@ -33,6 +35,10 @@ describe('BlackWall Test Suite', function(){
             firewall.addMember(list.valid,ipv6.expanded);
             // Check for member
             expect(policies.lists[list.valid].members[ipv6.expanded]).to.be.an('Object');
+		})
+        it('should allow * assignment', function(){
+            // Check for member
+            expect(firewall.admit(ipv6.validAlt)).to.be.true;
 		})
         it('should expand ipv6 members when added to specified list', function(){
             // Add member

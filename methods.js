@@ -11,10 +11,10 @@ var newMember = require("./policies/member");
 var lookup = function(ip) {
     /* Lookup function */
     var _this = this;
-    // Check if ip-address is invalid (accepts both v4 and v6 ips)
-    if(!ipaddr.isValid(ip)) return { error: "Invalid ip address!" };
     // Expand ipv6 address
     ip = ipaddr.parse(ip).toNormalizedString();
+    // Check if ip-address is invalid (accepts both v4 and v6 ips)
+    if(!ipaddr.isValid(ip)) return { error: "Invalid ip address!" };
 
     // Sort by priority
     var lists = _.sortBy(_this.policy.lists, function(item){ return -item.priority; });
@@ -78,6 +78,7 @@ var push = function(lookup) {
 
 var auto = function(ip) {
     var _lookup = lookup.apply(this, [ip]);
+    if(!_lookup) return false;
     if(admit.apply(this, [_lookup])) push(_lookup);
 
     return admit.apply(this, [_lookup]);
