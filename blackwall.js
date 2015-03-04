@@ -10,6 +10,10 @@ var newPolicy = require("./policies/new");
 var newMember = require("./policies/member");
 ///
 
+/// Packaged Frameworks
+var expressFramework = require("./frameworks/express");
+///
+
 var blackwall = function(policy) {
     // Set memory-stored policy to either passed policy or default
     this.policy = policy || defaultPolicy;
@@ -67,7 +71,8 @@ blackwall.prototype.admit = function(ip) {
 }
 
 blackwall.prototype.enforce = function(method) {
-
+    var array = _.rest(_.toArray(arguments));
+    if(method === "express") return expressFramework.create.apply(this, array);
 }
 
 module.exports = blackwall;
