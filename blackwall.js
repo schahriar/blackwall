@@ -11,8 +11,16 @@ var newMember = require("./policies/member");
 ///
 
 /// Packaged Frameworks
-var expressFramework = require("./frameworks/express");
+var frameworks = {
+    express: require("./frameworks/express")
+}
 ///
+
+//// TODO
+////// Add support for policy creation
+///// Add ip range support
+//// Add session-based policies
+/// Add dump and restore
 
 var blackwall = function(policy) {
     // Set memory-stored policy to either passed policy or default
@@ -22,8 +30,13 @@ var blackwall = function(policy) {
 
 util.inherits(blackwall, eventEmmiter);
 
-blackwall.prototype.createPolicy = function(name, policy) {
+blackwall.prototype.newPolicy = function(name, policy) {
+    // Save old policy
+    var oldPolicy = this.policy;
+    // Create a new policy from defaults and user provided object
     this.policy = _.defaults(newPolicy, policy, { name: name });
+
+    return oldPolicy;
 }
 
 blackwall.prototype.addList = function(name, rule, priority, force) {
@@ -62,17 +75,16 @@ blackwall.prototype.addMember = function(list, ip) {
     this.policy.lists[list].members[ip] = newMember;
 }
 
-blackwall.prototype.lookup = function(ip) {
-    return methods.lookup.apply(this, [ip]);
-}
-
 blackwall.prototype.admit = function(ip) {
     return methods.auto.apply(this, [ip]);
 }
 
+blackwall.prototype.addFramework = function(name, object) {
+    return frameworks[name] = object;
+}
+
 blackwall.prototype.enforce = function(method) {
-    var array = _.rest(_.toArray(arguments));
-    if(method === "express") return expressFramework.create.apply(this, array);
+    if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].create))) return frameworks[method].create.apply(this);
 }
 
 module.exports = blackwall;
