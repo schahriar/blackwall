@@ -84,7 +84,7 @@ blackwall.prototype.addFramework = function(name, object) {
 }
 
 blackwall.prototype.enforce = function(method) {
-    if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].create))) return frameworks[method].create.apply(this);
+    if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].create))) return frameworks[method].inbound.apply(this);
 }
 
 module.exports = blackwall;

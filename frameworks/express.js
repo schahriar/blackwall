@@ -3,7 +3,7 @@ module.exports = {
     name: "express",
     framework: true,
 
-    create: function() {
+    inbound: function() {
         var _this = this;
 
         return function(req, res, next) {
