@@ -29,7 +29,7 @@ var lookup = function(ip) {
         // Lookup ip (probably not the fastest method)
         if(list.members[ip]) {
             // Assign location and rule to lookup object
-            lookup = { location: list.members[ip], rule: _this.policy.rules[list.name]};
+            lookup = { location: list.members[ip], rule: _this.policy.rules[list.name], ip: ip };
             // break the loop
             return false;
         }
@@ -43,7 +43,11 @@ var admit = function(lookup) {
     var _this = this;
 
     // Check if blocked
-    if(lookup.rule.block) return false;
+    if(lookup.rule.block) {
+        // Emit denied event
+        _this.emit("denied", lookup.ip, { blocked: true });
+        return false;
+    }
 
     /* Rate limiting function */
 
@@ -51,7 +55,11 @@ var admit = function(lookup) {
     var rateTotal = { d:0, h:0, m:0, s:0 };
 
     // If any rates are set to 0
-    if((rateRule.d === 0) || (rateRule.h === 0) || (rateRule.m === 0) || (rateRule.s === 0)) return false;
+    if((rateRule.d === 0) || (rateRule.h === 0) || (rateRule.m === 0) || (rateRule.s === 0)) {
+        // Emit denied event
+        _this.emit("denied", lookup.ip, { rule: rateRule, total: rateTotal });
+        return false;
+    }
 
     // Foreach access granted time
     _.each(lookup.location.rate, function(accessTime, key) {
@@ -66,9 +74,14 @@ var admit = function(lookup) {
     });
 
     // If rate exceeds the limit
-    if((rateRule.d < rateTotal.d) || (rateRule.h < rateTotal.h) || (rateRule.m < rateTotal.m) || (rateRule.s < rateTotal.s)) return false;
+    if((rateRule.d < rateTotal.d) || (rateRule.h < rateTotal.h) || (rateRule.m < rateTotal.m) || (rateRule.s < rateTotal.s)) {
+        // Emit denied event
+        _this.emit("denied", lookup.ip, { rule: rateRule, total: rateTotal });
+        return false;
+    }
 
-    // Otherwise
+    // Otherwise admit ip
+    _this.emit("admitted", lookup.ip, { rule: rateRule, total: rateTotal });
     return true;
 }
 
