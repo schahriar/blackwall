@@ -75,8 +75,8 @@ blackwall.prototype.addMember = function(list, ip) {
     this.policy.lists[list].members[ip] = newMember;
 }
 
-blackwall.prototype.admit = function(ip) {
-    return methods.auto.apply(this, [ip]);
+blackwall.prototype.session = function(ip, callback) {
+    callback(methods.auto.apply(this, [ip]));
 }
 
 blackwall.prototype.addFramework = function(name, object) {

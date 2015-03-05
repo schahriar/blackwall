@@ -49,9 +49,12 @@ describe('BlackWall Test Suite', function(){
             // Check for member
             expect(policies.lists[list.valid].members[ipv6.expanded]).to.be.an('Object');
 		})
-        it('should allow * assignment', function(){
+        it('should allow * assignment', function(done){
             // Check for member
-            expect(firewall.admit(ipv6.validAlt)).to.be.true;
+            firewall.session(ipv6.validAlt, function(access) {
+                expect(access).to.be.true;
+                done();
+            })
 		})
         it('should expand ipv6 members when added to specified list', function(){
             // Add member
