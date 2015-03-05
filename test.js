@@ -51,7 +51,7 @@ describe('BlackWall Test Suite', function(){
 		})
         it('should allow * assignment', function(done){
             // Check for member
-            firewall.session(ipv6.validAlt, function(access) {
+            firewall.session(ipv6.validAlt, function(error, access) {
                 expect(access).to.be.true;
                 done();
             })

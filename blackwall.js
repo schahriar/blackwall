@@ -76,7 +76,7 @@ blackwall.prototype.addMember = function(list, ip) {
 }
 
 blackwall.prototype.session = function(ip, callback) {
-    callback(methods.auto.apply(this, [ip]));
+    callback(null, methods.auto.apply(this, [ip]));
 }
 
 blackwall.prototype.addFramework = function(name, object) {
