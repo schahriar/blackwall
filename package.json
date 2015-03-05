@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "chai": "^2.1.0",
+    "express": "^4.12.2",
     "mocha": "^2.1.0"
   }
 }

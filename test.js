@@ -1,6 +1,7 @@
 var chai = require("chai");
 var BlackWall = require("./blackwall");
 var inspect = require("util").inspect;
+var http = require('http');
 
 var _ = require("lodash");
 
@@ -9,6 +10,8 @@ var expect = chai.expect;
 
 var firewall = new BlackWall();
 var policies = firewall.policy;
+
+policies.rules.global.rate.s = 10;
 
 var ipv6 = {
     valid: "2001:0db8::0001",
@@ -27,6 +30,16 @@ var list = {
 var rules = {
     basic: { rate: { d:0, h:undefined, m:undefined }, block: false },
 }
+
+var express = require('express')
+var app = express();
+
+app.use(firewall.enforce("express"));
+
+app.get('/', function (req, res) {
+  res.send('Hello World!')
+})
+app.listen(3000);
 
 describe('BlackWall Test Suite', function(){
 	describe('Member & list management checks', function(){
@@ -69,4 +82,30 @@ describe('BlackWall Test Suite', function(){
             expect(firewall.addList(list.case, rules.basic, 0.5, true)).to.not.have.property('error');
 		})
 	})
+
+    describe('EXPRESSJS firewall checks', function(){
+        this.timeout(5000);
+		it('should allow on first call', function(done){
+            http.get('http://localhost:3000', function (res) {
+                res.statusCode.should.equal(200);
+                done();
+            });
+		})
+        it('should deny over 10 calls a second [defined rule]', function(done){
+            for(i=0; i<10; i++) http.get('http://localhost:3000');
+            http.get('http://localhost:3000', function (res) {
+                res.statusCode.should.equal(503);
+                done();
+            });
+		})
+        it('should allow < 10 calls after a second', function(done){
+            setTimeout(function(){
+                for(i=0; i<5; i++) http.get('http://localhost:3000');
+                http.get('http://localhost:3000', function (res) {
+                    res.statusCode.should.equal(200);
+                    done();
+                });
+            }, 1200);
+		})
+    });
 });
