@@ -14,9 +14,9 @@ Currently included in the *Alpha* version:
 4. Frameworks
 5. Rate limiting
 6. Blacklisting
-7. *Upcoming: Whitelisting*
-8. *Upcoming: Conditional policy change*
-9. *Upcoming: Mass member add*
+7. Whitelisting
+8. Mass member add
+9. *Upcoming: Conditional policy change*
 10. *Upcoming: Dump and restore for policies*
 
 # Usage

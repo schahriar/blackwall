@@ -23,6 +23,12 @@ var ipv6 = {
     invalid: "4001:0db8:::0001"
 }
 
+var ipv4 = {
+    loop: function(i) {
+        return "188.88." + Math.floor(i/255) + "." + i%255;
+    }
+}
+
 var list = {
     valid: "global",
     ALLed: "global",
@@ -32,13 +38,21 @@ var list = {
 
 var rules = {
     basic: { rate: { d:0, h:undefined, m:undefined }, block: false },
-    modified: { rate: { d:undefined, h:600, m:undefined }, block:false }
+    modified: { rate: { d:undefined, h:600, m:undefined }, block:false },
+    whitelist: { whitelist: true }
 }
 
 /// Express Server
 var app = express();
 
-app.use(firewall.enforce("express"));
+// Allow ip address spoofing for testing purposes
+app.use(function(req,res,next) {
+    if(req.query.address) req.overrideip = (req.query.address);
+    next();
+})
+
+// Unsafe allows for overriding ip address
+app.use(firewall.enforce("express", { unsafe: true }));
 
 app.get('/', function (req, res) { res.send('Hello World!') })
 app.listen(3000);
@@ -63,6 +77,12 @@ describe('BlackWall Test Suite', function(){
             // Check for member
             expect(policies.lists[list.valid].members[ipv6.expanded]).to.be.an('Object');
 		})
+        it('should allow mass member additions (3000 ipv4s)', function(){
+            // Add 3000 members
+            for(i=0; i<3000; i++) firewall.addMember(list.valid,ipv4.loop(i));
+            // Check for member
+            expect(Object.keys(policies.lists[list.valid].members).length).to.be.at.least(3000);
+		})
         it('should allow * assignment', function(done){
             // Check for member
             firewall.session(ipv6.validAlt, function(error, access) {
@@ -82,7 +102,7 @@ describe('BlackWall Test Suite', function(){
 		})
         it('should return an error with invalid ip addresses', function(){
             // Add member
-            expect(firewall.addMember(list.valid,ipv6.invalid)).to.have.property('error');
+            expect(function() { firewall.addMember(list.valid,ipv6.invalid) }).to.throw("Invalid ip address!");
 		})
         it('should store all lists as lowercase', function(){
             // Add list
@@ -153,6 +173,34 @@ describe('BlackWall Test Suite', function(){
                     done();
                 })
             }, 1200);
+		})
+    });
+
+    describe('Whitelist ip firewall checks', function(){
+        this.timeout(5000);
+		it('should allow on first call', function(done){
+            http.get('http://localhost:3000/?address=240.24.24.24', function (res) {
+                res.statusCode.should.equal(200);
+                done();
+            });
+		})
+        it('should not allow after whitelisting', function(done){
+            // Create a whitelist
+            firewall.addList("whitelist", rules.whitelist, 1, false);
+
+            http.get('http://localhost:3000/?address=240.24.24.24', function (res) {
+                res.statusCode.should.equal(503);
+                done();
+            });
+		})
+        it('should allow listed members after whitelisting', function(done){
+            // Whitelist 240.24.24.200 only
+            firewall.addMember("whitelist", "240.24.24.200");
+
+            http.get('http://localhost:3000/?address=240.24.24.200', function (res) {
+                res.statusCode.should.equal(200);
+                done();
+            });
 		})
     });
 });
