@@ -70,20 +70,27 @@ blackwall.prototype.addList = function(name, rule, priority, global, force) {
     return this.policy.lists[name];
 }
 
-blackwall.prototype.addMember = function(list, ip) {
+blackwall.prototype.addMember = function(list, ips) {
+    var _this = this;
+
     // Convert list name to lowercase
     var list = list.toLowerCase();
 
     // If list does not exist
     if(!this.policy.lists[list]) return { error: "List not found!" };
 
-    // Check if ip-address is invalid (accepts both v4 and v6 ips)
-    if(!ipaddr.isValid(ip)) return { error: "Invalid ip address!" };
+    // Change ips to single item array if string is given
+    ips = (_.isString(ips))?[ips]:ips;
 
-    // Expand ipv6 address
-    ip = (ipaddr.parse(ip) === "ipv6")?ipaddr.parse(ip).toNormalizedString():ip;
+    _.each(ips, function(ip) {
+        // Check if ip-address is invalid (accepts both v4 and v6 ips)
+        if(!ipaddr.isValid(ip)) throw new Error("Invalid ip address!");
 
-    this.policy.lists[list].members[ip] = newMember;
+        // Expand ipv6 address
+        ip = (ipaddr.parse(ip) === "ipv6")?ipaddr.parse(ip).toNormalizedString():ip;
+
+        _this.policy.lists[list].members[ip] = newMember.create();
+    })
 }
 
 blackwall.prototype.session = function(ip, callback) {
