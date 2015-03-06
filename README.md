@@ -7,16 +7,17 @@ An application layer firewall module for NodeJS
 
 # Features
 Currently included in the *Alpha* version:
+
 1. ipv4 & ipv6 support
-- List specific policies
-- Events
-- Frameworks
-- Rate limiting
-- Blacklisting
-- *Upcoming: Whitelisting*
-- *Upcoming: Conditional policy change*
-- *Upcoming: Mass member add*
-- *Upcoming: Dump and restore for policies*
+2. List specific policies
+3. Events
+4. Frameworks
+5. Rate limiting
+6. Blacklisting
+7. *Upcoming: Whitelisting*
+8. *Upcoming: Conditional policy change*
+9. *Upcoming: Mass member add*
+10. *Upcoming: Dump and restore for policies*
 
 # Usage
 ```
@@ -135,18 +136,18 @@ var onAccess = firewall.enforce();
 Features planned for *Beta* version:
 
 1. Session based policies
-- Ip range support for ipv6 and ipv4
-- Custom denial of service response
-- Proxy support
-- Bandwidth limiting
-- Concurrent connection limiting
+2. Ip range support for ipv6 and ipv4
+3. Custom denial of service response
+4. Proxy support
+5. Bandwidth limiting
+6. Concurrent connection limiting
 
 Features planned for *Stable Release* version:
 
 1. Geo-location based policies
-- Deep packet inspection
-- Analytics
-- Outgoing support
+2. Deep packet inspection
+3. Analytics
+4. Outgoing support
 
 # Test Suite
 You can test **blackwall** using the Mocha module. This includes express and TCP tests.
