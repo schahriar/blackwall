@@ -1,7 +1,7 @@
 {
   "name": "blackwall",
-  "version": "0.1.3",
-  "description": "An application layer firewall for NodeJS",
+  "version": "0.1.7",
+  "description": "A programmable firewall for NodeJS",
   "main": "blackwall.js",
   "scripts": {
     "test": "mocha"
