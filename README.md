@@ -105,7 +105,7 @@ Lists contain a priority value between 0 (last) and 1 (first). This value determ
 2. Custom list
 3. Global
 
-
+-----------
 #### Global lists
 A list with global property will match all addresses. This should be generally used with a global set of rules that have a 0 priority value otherwise rules with lower priority will not be evaluated.
 
@@ -148,6 +148,7 @@ Features planned for *Beta* version:
 5. Bandwidth limiting
 6. Concurrent connection limiting
 
+<br>
 
 Features planned for *Stable Release* version:
 
