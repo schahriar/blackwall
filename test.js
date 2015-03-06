@@ -83,6 +83,12 @@ describe('BlackWall Test Suite', function(){
             // Check for member
             expect(Object.keys(policies.lists[list.valid].members).length).to.be.at.least(3000);
 		})
+        it('should allow mass member removals (2900 ipv4s)', function(){
+            // Remove 2900 members
+            for(i=0; i<2900; i++) firewall.removeMember(list.valid,ipv4.loop(i));
+            // Check for member
+            expect(Object.keys(policies.lists[list.valid].members).length).to.be.below(200);
+		})
         it('should allow * assignment', function(done){
             // Check for member
             firewall.session(ipv6.validAlt, function(error, access) {
@@ -98,7 +104,7 @@ describe('BlackWall Test Suite', function(){
 		})
         it('should return an error when users are added to non-existent list', function(){
             // Add member
-            expect(firewall.addMember(list.invalid,ipv6.expanded)).to.have.property('error');
+            expect(function() { firewall.addMember(list.invalid,ipv6.expanded) }).to.throw(Error);
 		})
         it('should return an error with invalid ip addresses', function(){
             // Add member
@@ -106,21 +112,26 @@ describe('BlackWall Test Suite', function(){
 		})
         it('should store all lists as lowercase', function(){
             // Add list
-            firewall.addList(list.case, rules.basic, 0.5);
+            firewall.addList(list.case, rules.basic, 0.5, false, true);
             // Expect lowercase
             expect(policies.lists[list.case.toLowerCase()]).to.have.property('name').equal(list.case.toLowerCase());
 		})
         it('should return an error for duplicate lists', function(){
             // Add list
-            expect(firewall.addList(list.case, rules.basic, 0.5)).to.have.property('error');
+            expect(function() { firewall.addList(list.case, rules.basic, 0.5) }).to.throw(Error);
 		})
         it('should not return an error for duplicate lists when forced', function(){
             // Add list
-            expect(firewall.addList(list.case, rules.basic, 0.5, false, true)).to.not.have.property('error');
+            expect(function() { firewall.addList(list.case, rules.basic, 0.5, false, true) }).to.not.throw(Error);
 		})
         it('should modify rules correctly', function(){
-            // Add list
+            // Modify rule
             expect(firewall.modifyRule(list.case, rules.modified, false)).to.be.equal(rules.modified);
+		})
+        it('should remove lists', function(){
+            // Remove list
+            firewall.removeList(list.case)
+            expect(policies.lists[list.case.toLowerCase()]).to.be.undefined;
 		})
 	})
 

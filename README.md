@@ -65,10 +65,15 @@ server.listen(3100);
 
 **addList:** (name:String, rules:Object, priority:Float, global:Bool, force:Bool) - *Creates a new list with the given rules and priority. Set force to true to modify if list exists.*
 
+**removeList:** (name:String) - *Removes a list.*
+
 **modifyRule:** (listName:String, rule:Object, merge:Bool) - *Modifies rules for a given list. Set merge to true to merge existing and new rules.*
 
 **addMember:** (list:String, ip:String) -
 *Adds a member (ipv4 or ipv6 address) to a list.*
+
+**removeMember:** (list:String, ip:String) -
+*Removes a member (ipv4 or ipv6 address) from a list.*
 
 **addFramework:** (name:String, framework:Object) - *Adds a given framework to frameworks list. This can be later called through .enforce(framework-name)*
 
@@ -99,6 +104,7 @@ Lists contain a priority value between 0 (last) and 1 (first). This value determ
 1. Whitelist/Blacklist
 2. Custom list
 3. Global
+
 
 #### Global lists
 A list with global property will match all addresses. This should be generally used with a global set of rules that have a 0 priority value otherwise rules with lower priority will not be evaluated.
@@ -141,6 +147,7 @@ Features planned for *Beta* version:
 4. Proxy support
 5. Bandwidth limiting
 6. Concurrent connection limiting
+
 
 Features planned for *Stable Release* version:
 

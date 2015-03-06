@@ -21,8 +21,6 @@ var frameworks = {
 //////// Add ip range support
 /////// Add session-based policies
 ////// Add dump and restore
-///// Change errors to proper Error type
-//// Add member removal support
 
 var blackwall = function(policy) {
     // Set memory-stored policy to either passed policy or default
@@ -48,35 +46,47 @@ blackwall.prototype.modifyRule = function(listName, rule, merge) {
     return this.policy.rules[listName] = (merge)?_.defaults(this.policy.rules[listName], rule):rule;
 }
 
-blackwall.prototype.addList = function(name, rule, priority, global, force) {
+blackwall.prototype.addList = function() { var arguments = _.toArray(arguments); arguments.unshift('add'); this._lists.apply(this, arguments) }
+blackwall.prototype.removeList = function() { var arguments = _.toArray(arguments); arguments.unshift('remove'); this._lists.apply(this, arguments) }
+
+blackwall.prototype._lists = function(should, name, rule, priority, global, force) {
     // Convert list name to lowercase
     var name = name.toLowerCase();
 
     // If policy exists and list is not forced
-    if((this.policy.lists[name])&&(!force)) return { error: "List already exists! \n Lists are not case-sensitive." };
+    if((should === 'add')&&(this.policy.lists[name])&&(!force)) throw new Error("List already exists! \n Lists are not case-sensitive.");
 
-    // Create new list
-    this.policy.lists[name] = {
-        name: name,
-        priority: priority || 0.1,
-        '*': !!global,
-        members: new Object
+    if(should === 'add') {
+        // Create new list
+        this.policy.lists[name] = {
+            name: name,
+            priority: priority || 0.1,
+            '*': !!global,
+            members: new Object
+        }
+
+        // Assign rule
+        this.policy.rules[name] = _.defaults(rule, { rate: {}, block: false});
+    }else if(should === 'remove') {
+        delete this.policy.lists[name];
+        delete this.policy.rules[name];
     }
 
-    // Assign rule
-    this.policy.rules[name] = _.defaults(rule, { rate: {}, block: false});
-
-    return this.policy.lists[name];
+    return this.policy.lists[name] || true;
 }
 
-blackwall.prototype.addMember = function(list, ips) {
+blackwall.prototype.addMember = function(list, ips) { this._members('add', list, ips); }
+
+blackwall.prototype.removeMember = function(list, ips) { this._members('remove', list, ips); }
+
+blackwall.prototype._members = function(should, list, ips) {
     var _this = this;
 
     // Convert list name to lowercase
     var list = list.toLowerCase();
 
     // If list does not exist
-    if(!this.policy.lists[list]) return { error: "List not found!" };
+    if(!this.policy.lists[list]) throw new Error("List not found!");
 
     // Change ips to single item array if string is given
     ips = (_.isString(ips))?[ips]:ips;
@@ -88,7 +98,10 @@ blackwall.prototype.addMember = function(list, ips) {
         // Expand ipv6 address
         ip = (ipaddr.parse(ip) === "ipv6")?ipaddr.parse(ip).toNormalizedString():ip;
 
-        _this.policy.lists[list].members[ip] = newMember.create();
+        if(should === 'add')
+            _this.policy.lists[list].members[ip] = newMember.create();
+        else
+            delete _this.policy.lists[list].members[ip];
     })
 }
 

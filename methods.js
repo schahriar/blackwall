@@ -14,7 +14,7 @@ var lookup = function(ip) {
     // Expand ipv6 address
     ip = (ipaddr.parse(ip) === "ipv6")?ipaddr.parse(ip).toNormalizedString():ip;
     // Check if ip-address is invalid (accepts both v4 and v6 ips)
-    if(!ipaddr.isValid(ip)) return { error: "Invalid ip address!" };
+    if(!ipaddr.isValid(ip)) throw new Error("Invalid ip address!");
 
     // Sort by priority
     var lists = _.sortBy(_this.policy.lists, function(item){ return -item.priority; });
