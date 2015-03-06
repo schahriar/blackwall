@@ -3,7 +3,7 @@ module.exports = {
 
     lists : {
         global: { name: 'global', priority:0, members: new Object, '*': true },
-        blacklist: { name: 'blacklist', priority: 1, members: new Object }
+        blacklist: { name: 'blacklist', priority: 0.9, members: new Object }
     },
 
     rules: {
