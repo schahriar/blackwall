@@ -1,4 +1,4 @@
-![Blackwall firewall](blackwall.png "Blackwall")
+![Blackwall firewall](https://raw.githubusercontent.com/schahriar/blackwall/master/blackwall.png "Blackwall")
 A programmable firewall for NodeJS
 -----------------
 **blackwall** is an **incoming*** programmable firewall module designed for NodeJS. You can integrate it into your TCP connections or as an ExpressJS middleware, define a few rules and enforce a good deal of security for your server application. It is still in Alpha and there will be major features and changes coming soon.
