@@ -81,7 +81,7 @@ blackwall.prototype.addMember = function(list, ip) {
     if(!ipaddr.isValid(ip)) return { error: "Invalid ip address!" };
 
     // Expand ipv6 address
-    ip = ipaddr.parse(ip).toNormalizedString();
+    ip = (ipaddr.parse(ip) === "ipv6")?ipaddr.parse(ip).toNormalizedString():ip;
 
     this.policy.lists[list].members[ip] = newMember;
 }
