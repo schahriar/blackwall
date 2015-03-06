@@ -105,9 +105,9 @@ A list with global property will match all addresses. This should be generally u
 # Rules
 Rules are objects defined in policies and assigned to lists. There is a rule-set for every list. For now rules accept the following parameters:
 
-**rate: ** { d:Number, h:Number, m:Number, s:Number } - *rate can be used for rate-limiting. You can set a maximum of x Number of times per **d**ay **h**our **m**inute or **s**econd that a single address can gain access.*
+**rate:** { d:Number, h:Number, m:Number, s:Number } - *rate can be used for rate-limiting. You can set a maximum of x Number of times per **d**ay **h**our **m**inute or **s**econd that a single address can gain access.*
 
-**block: ** Bool - *Block can directly block access of addresses that fall under the list regardless of any other limits if set to **true**.*
+**block:** Bool - *Block can directly block access of addresses that fall under the list regardless of any other limits if set to **true**.*
 
 
 # Frameworks
@@ -145,6 +145,12 @@ Features planned for *Stable Release* version:
 - Deep packet inspection
 - Analytics
 - Outgoing support
+
+# Test Suite
+You can test **blackwall** using the Mocha module. This includes express and TCP tests.
+```javascript
+npm test
+```
 
 # License
 Who doesn't love [MIT license](https://raw.githubusercontent.com/schahriar/blackwall/master/LICENSE)?
