@@ -133,6 +133,7 @@ var onAccess = firewall.enforce();
 # What's next?
 
 Features planned for *Beta* version:
+
 1. Session based policies
 - Ip range support for ipv6 and ipv4
 - Custom denial of service response
@@ -141,6 +142,7 @@ Features planned for *Beta* version:
 - Concurrent connection limiting
 
 Features planned for *Stable Release* version:
+
 1. Geo-location based policies
 - Deep packet inspection
 - Analytics
