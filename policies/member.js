@@ -1,3 +1,5 @@
 module.exports = {
-    rate: new Array
+    create: function() {
+        return { rate: [] };
+    }
 }

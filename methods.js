@@ -12,7 +12,7 @@ var lookup = function(ip) {
     /* Lookup function */
     var _this = this;
     // Expand ipv6 address
-    ip = ipaddr.parse(ip).toNormalizedString();
+    ip = (ipaddr.parse(ip) === "ipv6")?ipaddr.parse(ip).toNormalizedString():ip;
     // Check if ip-address is invalid (accepts both v4 and v6 ips)
     if(!ipaddr.isValid(ip)) return { error: "Invalid ip address!" };
 
@@ -25,11 +25,17 @@ var lookup = function(ip) {
     // Go through each list in order
     _.each(lists, function(list) {
         // If * is true add ip to list
-        if(list['*']) list.members[ip] = newMember;
+        if((list['*'])&&(!list.members[ip])) list.members[ip] = newMember.create();
         // Lookup ip (probably not the fastest method)
         if(list.members[ip]) {
             // Assign location and rule to lookup object
             lookup = { location: list.members[ip], rule: _this.policy.rules[list.name], ip: ip };
+            // break the loop
+            return false;
+        }else if(_this.policy.rules[list.name].whitelist === true) {
+            // If list is a whitelist deny subsequent addresses
+            // Assign blocking rule
+            lookup = { rule: { block: true } };
             // break the loop
             return false;
         }
@@ -51,7 +57,7 @@ var admit = function(lookup) {
 
     /* Rate limiting function */
 
-    var rateRule = lookup.rule.rate;
+    var rateRule = lookup.rule.rate || {};
     var rateTotal = { d:0, h:0, m:0, s:0 };
 
     // If any rates are set to 0
@@ -61,23 +67,26 @@ var admit = function(lookup) {
         return false;
     }
 
-    // Foreach access granted time
-    _.each(lookup.location.rate, function(accessTime, key) {
-        if((rateRule.d) && (moment(accessTime).diff(moment(), 'days') >= 0 )) rateTotal.d += 1;
-            else if (rateRule.d) lookup.location.rate.splice(key, 1); // Drop accessTime
-        if((rateRule.h) && (moment(accessTime).diff(moment(), 'hours') >= 0 )) rateTotal.h += 1;
-            else if ((rateRule.h) && (!rateRule.d)) lookup.location.rate.splice(key, 1); // Drop accessTime
-        if((rateRule.m) && (moment(accessTime).diff(moment(), 'minutes') >= 0 )) rateTotal.m += 1;
-            else if ((rateRule.m) && (!rateRule.h) && (!rateRule.d)) lookup.location.rate.splice(key, 1); // Drop accessTime
-        if((rateRule.s) && (moment(accessTime).diff(moment(), 'seconds') >= 0 )) rateTotal.s += 1;
-            else if ((rateRule.s) && (!rateRule.m) && (!rateRule.h) && (!rateRule.d)) lookup.location.rate.splice(key, 1); // Drop accessTime
-    });
+    // Prevent computation if rateRule is undefined
+    if(rateRule) {
+        // Foreach access granted time
+        _.each(lookup.location.rate, function(accessTime, key) {
+            if((rateRule.d) && (moment(accessTime).diff(moment(), 'days') >= 0 )) rateTotal.d += 1;
+                else if (rateRule.d) lookup.location.rate.splice(key, 1); // Drop accessTime
+            if((rateRule.h) && (moment(accessTime).diff(moment(), 'hours') >= 0 )) rateTotal.h += 1;
+                else if ((rateRule.h) && (!rateRule.d)) lookup.location.rate.splice(key, 1); // Drop accessTime
+            if((rateRule.m) && (moment(accessTime).diff(moment(), 'minutes') >= 0 )) rateTotal.m += 1;
+                else if ((rateRule.m) && (!rateRule.h) && (!rateRule.d)) lookup.location.rate.splice(key, 1); // Drop accessTime
+            if((rateRule.s) && (moment(accessTime).diff(moment(), 'seconds') >= 0 )) rateTotal.s += 1;
+                else if ((rateRule.s) && (!rateRule.m) && (!rateRule.h) && (!rateRule.d)) lookup.location.rate.splice(key, 1); // Drop accessTime
+        });
 
-    // If rate exceeds the limit
-    if((rateRule.d < rateTotal.d) || (rateRule.h < rateTotal.h) || (rateRule.m < rateTotal.m) || (rateRule.s < rateTotal.s)) {
-        // Emit denied event
-        _this.emit("denied", lookup.ip, { rule: rateRule, total: rateTotal });
-        return false;
+        // If rate exceeds the limit
+        if((rateRule.d < rateTotal.d) || (rateRule.h < rateTotal.h) || (rateRule.m < rateTotal.m) || (rateRule.s < rateTotal.s)) {
+            // Emit denied event
+            _this.emit("denied", lookup.ip, { rule: rateRule, total: rateTotal });
+            return false;
+        }
     }
 
     // Otherwise admit ip
