@@ -22,8 +22,7 @@ var frameworks = {
 /////// Add session-based policies
 ////// Add dump and restore
 ///// Change errors to proper Error type
-//// Enable mass member add
-/// Add white-list support
+//// Add member removal support
 
 var blackwall = function(policy) {
     // Set memory-stored policy to either passed policy or default
