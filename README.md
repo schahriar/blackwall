@@ -1,7 +1,7 @@
 ![Blackwall firewall](blackwall.png "Blackwall")
-An application layer firewall module for NodeJS
+A programmable firewall for NodeJS
 -----------------
-**blackwall** is an **incoming*** application-layer firewall module designed for NodeJS. You can integrate it into your TCP connections or as an ExpressJS middleware, define a few rules and enforce a good deal of security for your server application.
+**blackwall** is an **incoming*** programmable firewall module designed for NodeJS. You can integrate it into your TCP connections or as an ExpressJS middleware, define a few rules and enforce a good deal of security for your server application. It is still in Alpha and there will be major features and changes coming soon.
 
 \* *blackwall* currently only supports incoming connections. Outgoing support is planned for the first release.
 
@@ -149,7 +149,6 @@ Features planned for *Beta* version:
 6. Concurrent connection limiting
 
 <br>
-
 Features planned for *Stable Release* version:
 
 1. Geo-location based policies
