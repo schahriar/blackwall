@@ -12,15 +12,18 @@ var newMember = require("./policies/member");
 
 /// Packaged Frameworks
 var frameworks = {
-    express: require("./frameworks/express")
+    express: require("./frameworks/express"),
+    custom: require("./frameworks/custom")
 }
 ///
 
 //// TODO
-////// Add support for policy creation
-///// Add ip range support
-//// Add session-based policies
-/// Add dump and restore
+//////// Add ip range support
+/////// Add session-based policies
+////// Add dump and restore
+///// Change errors to proper Error type
+//// Enable mass member add
+/// Add white-list support
 
 var blackwall = function(policy) {
     // Set memory-stored policy to either passed policy or default
@@ -30,6 +33,7 @@ var blackwall = function(policy) {
 
 util.inherits(blackwall, eventEmmiter);
 
+/* Release with policy exchange functions
 blackwall.prototype.newPolicy = function(name, policy) {
     // Save old policy
     var oldPolicy = this.policy;
@@ -38,8 +42,14 @@ blackwall.prototype.newPolicy = function(name, policy) {
 
     return oldPolicy;
 }
+*/
 
-blackwall.prototype.addList = function(name, rule, priority, force) {
+blackwall.prototype.modifyRule = function(listName, rule, merge) {
+    // If merge is true then merge current rules with new ones otherwise set to rule
+    return this.policy.rules[listName] = (merge)?_.defaults(this.policy.rules[listName], rule):rule;
+}
+
+blackwall.prototype.addList = function(name, rule, priority, global, force) {
     // Convert list name to lowercase
     var name = name.toLowerCase();
 
@@ -50,11 +60,12 @@ blackwall.prototype.addList = function(name, rule, priority, force) {
     this.policy.lists[name] = {
         name: name,
         priority: priority || 0.1,
+        '*': !!global,
         members: new Object
     }
 
     // Assign rule
-    this.policy.rules[name] = rule;
+    this.policy.rules[name] = _.defaults(rule, { rate: {}, block: false});
 
     return this.policy.lists[name];
 }
@@ -79,12 +90,15 @@ blackwall.prototype.session = function(ip, callback) {
     callback(null, methods.auto.apply(this, [ip]));
 }
 
-blackwall.prototype.addFramework = function(name, object) {
-    return frameworks[name] = object;
+blackwall.prototype.addFramework = function(name, framework) {
+    return frameworks[name] = framework;
 }
 
-blackwall.prototype.enforce = function(method) {
-    if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].create))) return frameworks[method].inbound.apply(this);
+blackwall.prototype.enforce = function(method, options) {
+    if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].inbound))) return frameworks[method].inbound.apply(this, [options]); else if(!method) {
+        // Use default/custom method
+        return frameworks['custom'].inbound.apply(this, [options]);
+    }
 }
 
 module.exports = blackwall;

@@ -3,8 +3,7 @@ module.exports = {
 
     lists : {
         global: { name: 'global', priority:0, members: new Object, '*': true },
-        blacklist: { name: 'blacklist', priority: 1, members: new Object },
-        whitelist: { name: 'whitelist', priority: 0.9, members: new Object }
+        blacklist: { name: 'blacklist', priority: 1, members: new Object }
     },
 
     rules: {
@@ -15,10 +14,6 @@ module.exports = {
         blacklist: {
             rate: { d:0, h:undefined, m:undefined, s:undefined },
             block: true
-        },
-        whitelist: {
-            rate: { d:undefined, h:undefined, m:undefined, s:120 },
-            block: false
         }
     }
 }
