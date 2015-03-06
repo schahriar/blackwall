@@ -2,6 +2,8 @@ var chai = require("chai");
 var BlackWall = require("./blackwall");
 var inspect = require("util").inspect;
 var http = require('http');
+var net = require('net');
+var express = require('express');
 
 var _ = require("lodash");
 
@@ -11,6 +13,7 @@ var expect = chai.expect;
 var firewall = new BlackWall();
 var policies = firewall.policy;
 
+// Set global per sec rule to <= 10
 policies.rules.global.rate.s = 10;
 
 var ipv6 = {
@@ -29,17 +32,28 @@ var list = {
 
 var rules = {
     basic: { rate: { d:0, h:undefined, m:undefined }, block: false },
+    modified: { rate: { d:undefined, h:600, m:undefined }, block:false }
 }
 
-var express = require('express')
+/// Express Server
 var app = express();
 
 app.use(firewall.enforce("express"));
 
-app.get('/', function (req, res) {
-  res.send('Hello World!')
-})
+app.get('/', function (req, res) { res.send('Hello World!') })
 app.listen(3000);
+///
+
+/// TCP Server
+var server = net.createServer(function(socket) {
+    firewall.enforce()(
+        socket.remoteAddress,
+        function() { socket.end("FIREWALL"); },
+        function() { socket.write('connected'); }
+    )
+});
+server.listen(3100);
+///
 
 describe('BlackWall Test Suite', function(){
 	describe('Member & list management checks', function(){
@@ -82,11 +96,15 @@ describe('BlackWall Test Suite', function(){
 		})
         it('should not return an error for duplicate lists when forced', function(){
             // Add list
-            expect(firewall.addList(list.case, rules.basic, 0.5, true)).to.not.have.property('error');
+            expect(firewall.addList(list.case, rules.basic, 0.5, false, true)).to.not.have.property('error');
+		})
+        it('should modify rules correctly', function(){
+            // Add list
+            expect(firewall.modifyRule(list.case, rules.modified, false)).to.be.equal(rules.modified);
 		})
 	})
 
-    describe('EXPRESSJS firewall checks', function(){
+    describe('ExpressJS firewall checks', function(){
         this.timeout(5000);
 		it('should allow on first call', function(done){
             http.get('http://localhost:3000', function (res) {
@@ -103,11 +121,37 @@ describe('BlackWall Test Suite', function(){
 		})
         it('should allow < 10 calls after a second', function(done){
             setTimeout(function(){
-                for(i=0; i<5; i++) http.get('http://localhost:3000');
+                for(i=0; i<4; i++) http.get('http://localhost:3000');
                 http.get('http://localhost:3000', function (res) {
                     res.statusCode.should.equal(200);
                     done();
                 });
+            }, 1200);
+		})
+    });
+
+    describe('TCP firewall checks', function(){
+        this.timeout(10000);
+		it('should allow on first call', function(done){
+            net.connect({port: 3100}).on('data', function(data) {
+                data.toString().should.equal('connected');
+                done();
+            })
+		})
+        it('should deny over 10 calls a second [defined rule]', function(done){
+            for(c=0; c<10; c++) net.connect({port: 3100});
+            net.connect({port: 3100}).on('close', function(had_error) {
+                expect(had_error).to.be.false;
+                done();
+            })
+		})
+        it('should allow < 10 calls after a second', function(done){
+            setTimeout(function(){
+                for(i=0; i<4; i++) net.connect({port: 3100});
+                net.connect({port: 3100}).on('data', function(data) {
+                    data.toString().should.equal('connected');
+                    done();
+                })
             }, 1200);
 		})
     });
