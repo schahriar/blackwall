@@ -1,16 +1,8 @@
 var _ = require("lodash");
-var ipaddr = require('ipaddr.js');
 var eventEmmiter = require('events').EventEmitter;
 var util = require("util");
-var methods = require("./methods");
 var Bloc = require("./lib/bloc");
 var Session = require("./lib/session");
-
-/// Packaged Policies
-var defaultPolicy = require("./policies/default");
-var newPolicy = require("./policies/new");
-var newMember = require("./policies/member");
-///
 
 /// Packaged Frameworks
 var frameworks = {
