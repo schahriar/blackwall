@@ -9,16 +9,17 @@ module.exports = {
         return function(req, res, next) {
             if((!options) || (!options.unsafe)) req.overrideip = false;
             var address = (req.overrideip || _.first(req.ips) || req.ip);
-            _this.session(address, {
+            var session = _this.session(address, {
                 ip: address
-            }, policy, function(error, session){
-                // Handle Express Errors better
-                if(error) return console.log("SESSION ERROR:", error);
-                session.on('terminate', function() {
-                    res.status(503).end();
-                })
-                next();
             });
+            // Handle Express Errors better
+            if(session.constructor === Error) return console.log("SESSION ERROR:", session.message);
+            session.on('terminate', function() {
+                res.status(503).end();
+            })
+            _this.assign(session, policy);
+            if(session.terminated) return res.status(503).end();
+            next();
         }
     },
 }
