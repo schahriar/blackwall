@@ -57,7 +57,7 @@ blackwall.prototype.removePolicy = function(policy) {
     })
 }
 
-blackwall.prototype.session = function(id, info, policy) {
+blackwall.prototype.session = function(id, info) {
     /* Allow for ambiguous identification */
     /* ARGUMENTS:
     id: identifier, An ip address or a value that represents the authenticated address (Not a Session ID)
