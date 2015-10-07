@@ -47,7 +47,7 @@ blackwall.prototype.addPolicy = function(name, rules, priority, callback) {
     this.policies[name] = {
         name: name,
         rules: rules,
-        bloc: new Object,
+        bloc: new Bloc(this.policies[name]),
         priority: priority
     }
     
@@ -69,7 +69,7 @@ blackwall.prototype.session = function(id, info, policy, callback) {
     callback: Returns either error or an instance of Session
     */
     if(!id) return callback(new Error("An Identifier is required to create a new session"));
-    callback(null, new Session(id, info, policy.bloc));
+    callback(null, new Session(id, info, policy.bloc.assign));
 }
 
 blackwall.prototype.addFramework = function(name, framework) {
