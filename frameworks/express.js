@@ -3,18 +3,22 @@ module.exports = {
     name: "express",
     framework: true,
 
-    inbound: function(options) {
+    inbound: function(policy, options) {
         var _this = this;
 
         return function(req, res, next) {
             if(!options.unsafe) req.overrideip = false;
-            // Perhaps in future versions Blackwall could request for all ips in one go
-            _this.session( (req.overrideip || _.first(req.ips) || req.ip), function(error, hasAccess) {
-                if(error) res.status(500).end(); // Add error reporting in development env
-
-                if(hasAccess === true) next();
-                else res.status(503).end();
-            })
+            var address = (req.overrideip || _.first(req.ips) || req.ip);
+            _this.session(address, {
+                ip: address
+            }, policy, function(error, session){
+                // Handle Express Errors better
+                if(error) return console.log("SESSION ERROR:", error);
+                session.on('terminate', function() {
+                    res.status(503).end();
+                })
+                next();
+            });
         }
     },
 }
