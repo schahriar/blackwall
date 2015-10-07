@@ -1,6 +1,7 @@
 var _ = require("lodash");
 var eventEmmiter = require('events').EventEmitter;
 var util = require("util");
+var ipaddr = require('ipaddr.js');
 var Bloc = require("./lib/bloc");
 var Session = require("./lib/session");
 
@@ -64,6 +65,12 @@ blackwall.prototype.session = function(id, info) {
     info: information, An Object containing
     */
     if(!id) return new Error("An Identifier is required to create a new session");
+    // If id is an ipv6 then expand the stored id
+    // Check if ID is an IP
+    if(ipaddr.isValid(id)) {
+        // IF ipv6 -> Expand ipv6 address
+        id = (ipaddr.parse(id) === "ipv6")?ipaddr.parse(id).toNormalizedString():id;   
+    }
     return new Session(id, info);
 }
 
