@@ -29,6 +29,7 @@ blackwall.prototype.modifyRule = function(name, rules, merge) {
 }
 
 blackwall.prototype.addPolicy = function(name, rules, priority, callback) {
+    var _this = this;
     // Make Priority Optional
     if(!name) return callback(new Error('A name is required to create a new policy'));
     if(!rules) rules = [];
@@ -42,7 +43,7 @@ blackwall.prototype.addPolicy = function(name, rules, priority, callback) {
     this.policies[name] = {
         name: name,
         rules: rules,
-        bloc: new Bloc(this),
+        bloc: new Bloc(function() { return _this.policies[name] }),
         priority: priority
     }
     
@@ -61,13 +62,14 @@ blackwall.prototype.session = function(id, info, policy, callback) {
     /* ARGUMENTS:
     id: identifier, An ip address or a value that represents the authenticated address (Not a Session ID)
     info: information, An Object containing
-    bloc: Identifies which list this session belongs to
     callback: Returns either error or an instance of Session
     */
-    if(!id) return callback(new Error("An Identifier is required to create a new session"));
-    callback(null, new Session(id, info, function(session){
-        policy.bloc.assign.apply(policy.bloc, [session]);
-    }));
+    if(!id) return new Error("An Identifier is required to create a new session");
+    return new Session(id, info);
+}
+
+blackwall.prototype.assign = function(session, policy) {
+    policy.bloc.assign(session);
 }
 
 blackwall.prototype.addFramework = function(name, framework) {
