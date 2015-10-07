@@ -33,7 +33,10 @@ blackwall.prototype.addPolicy = function(name, rules, priority, callback) {
     if(!name) return callback(new Error('A name is required to create a new policy'));
     if(!rules) rules = [];
     if(!priority) priority = 0;
-    if((!callback) && (priority.constructor === Function)) callback = priority;
+    if((!callback) && (priority.constructor === Function)) {
+        callback = priority;
+        priority = 0;
+    }
     if(!!this.policies[name]) return callback(null, this.policies[name]);
     
     this.policies[name] = {
