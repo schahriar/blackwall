@@ -57,12 +57,11 @@ blackwall.prototype.removePolicy = function(policy) {
     })
 }
 
-blackwall.prototype.session = function(id, info, policy, callback) {
+blackwall.prototype.session = function(id, info, policy) {
     /* Allow for ambiguous identification */
     /* ARGUMENTS:
     id: identifier, An ip address or a value that represents the authenticated address (Not a Session ID)
     info: information, An Object containing
-    callback: Returns either error or an instance of Session
     */
     if(!id) return new Error("An Identifier is required to create a new session");
     return new Session(id, info);
