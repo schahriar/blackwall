@@ -39,7 +39,7 @@ blackwall.prototype.addPolicy = function(name, rules, priority, callback) {
     this.policies[name] = {
         name: name,
         rules: rules,
-        bloc: new Bloc(this.policies[name]),
+        bloc: new Bloc(this),
         priority: priority
     }
     
