@@ -3,6 +3,8 @@ var ipaddr = require('ipaddr.js');
 var eventEmmiter = require('events').EventEmitter;
 var util = require("util");
 var methods = require("./methods");
+var Bloc = require("./lib/bloc");
+var Session = require("./lib/session");
 
 /// Packaged Policies
 var defaultPolicy = require("./policies/default");
@@ -22,91 +24,52 @@ var frameworks = {
 /////// Add session-based policies
 ////// Add dump and restore
 
-var blackwall = function(policy) {
-    // Set memory-stored policy to either passed policy or default
-    this.policy = policy || defaultPolicy;
+var blackwall = function() {
+    this.policies = new Object;
     eventEmmiter.call(this);
 }
 
 util.inherits(blackwall, eventEmmiter);
 
-/* Release with policy exchange functions
-blackwall.prototype.newPolicy = function(name, policy) {
-    // Save old policy
-    var oldPolicy = this.policy;
-    // Create a new policy from defaults and user provided object
-    this.policy = _.defaults(newPolicy, policy, { name: name });
-
-    return oldPolicy;
-}
-*/
-
-blackwall.prototype.modifyRule = function(listName, rule, merge) {
+blackwall.prototype.modifyRule = function(name, rules, merge) {
     // If merge is true then merge current rules with new ones otherwise set to rule
-    return this.policy.rules[listName] = (merge)?_.defaults(this.policy.rules[listName], rule):rule;
+    return this.policies[name].rules = (merge)?_.defaults(this.policies[name].rules, rules):rules;
 }
 
-blackwall.prototype.addList = function() { var arguments = _.toArray(arguments); arguments.unshift('add'); this._lists.apply(this, arguments) }
-blackwall.prototype.removeList = function() { var arguments = _.toArray(arguments); arguments.unshift('remove'); this._lists.apply(this, arguments) }
-
-blackwall.prototype._lists = function(should, name, rule, priority, global, force) {
-    // Convert list name to lowercase
-    var name = name.toLowerCase();
-
-    // If policy exists and list is not forced
-    if((should === 'add')&&(this.policy.lists[name])&&(!force)) throw new Error("List already exists! \n Lists are not case-sensitive.");
-
-    if(should === 'add') {
-        // Create new list
-        this.policy.lists[name] = {
-            name: name,
-            priority: priority || 0.1,
-            '*': !!global,
-            members: new Object
-        }
-
-        // Assign rule
-        this.policy.rules[name] = _.defaults(rule, { rate: {}, block: false});
-    }else if(should === 'remove') {
-        delete this.policy.lists[name];
-        delete this.policy.rules[name];
+blackwall.prototype.addPolicy = function(name, rules, priority, callback) {
+    // Make Priority Optional
+    if(!name) return callback(new Error('A name is required to create a new policy'));
+    if(!rules) rules = [];
+    if(!priority) priority = 0;
+    if((!callback) && (priority.constructor === Function)) callback = priority;
+    if(!!this.policies[name]) return callback(null, this.policies[name]);
+    
+    this.policies[name] = {
+        name: name,
+        rules: rules,
+        bloc: new Object,
+        priority: priority
     }
-
-    return this.policy.lists[name] || true;
+    
+    callback(null, this.policies[name]);
 }
 
-blackwall.prototype.addMember = function(list, ips) { this._members('add', list, ips); }
-
-blackwall.prototype.removeMember = function(list, ips) { this._members('remove', list, ips); }
-
-blackwall.prototype._members = function(should, list, ips) {
-    var _this = this;
-
-    // Convert list name to lowercase
-    var list = list.toLowerCase();
-
-    // If list does not exist
-    if(!this.policy.lists[list]) throw new Error("List not found!");
-
-    // Change ips to single item array if string is given
-    ips = (_.isString(ips))?[ips]:ips;
-
-    _.each(ips, function(ip) {
-        // Check if ip-address is invalid (accepts both v4 and v6 ips)
-        if(!ipaddr.isValid(ip)) throw new Error("Invalid ip address!");
-
-        // Expand ipv6 address
-        ip = (ipaddr.parse(ip) === "ipv6")?ipaddr.parse(ip).toNormalizedString():ip;
-
-        if(should === 'add')
-            _this.policy.lists[list].members[ip] = newMember.create();
-        else
-            delete _this.policy.lists[list].members[ip];
+blackwall.prototype.removePolicy = function(policy) {
+    if(_.isObject(policy)) policy = policy.name;
+    this.policies = _.omit(this.policies, function(o){
+        return (o.name === policy.name);
     })
 }
 
-blackwall.prototype.session = function(ip, callback) {
-    callback(null, methods.auto.apply(this, [ip]));
+blackwall.prototype.session = function(id, info, policy, callback) {
+    /* ARGUMENTS:
+    id: identifier, An ip address or a value that represents the authenticated address (Not a Session ID)
+    info: information, An Object containing
+    bloc: Identifies which list this session belongs to
+    callback: Returns either error or an instance of Session
+    */
+    if(!id) return callback(new Error("An Identifier is required to create a new session"));
+    callback(null, new Session(id, info, policy.bloc));
 }
 
 blackwall.prototype.addFramework = function(name, framework) {
