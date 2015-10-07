@@ -7,7 +7,7 @@ module.exports = {
         var _this = this;
 
         return function(req, res, next) {
-            if(!options.unsafe) req.overrideip = false;
+            if((!options) || (!options.unsafe)) req.overrideip = false;
             var address = (req.overrideip || _.first(req.ips) || req.ip);
             _this.session(address, {
                 ip: address
