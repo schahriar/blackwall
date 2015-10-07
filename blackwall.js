@@ -65,7 +65,9 @@ blackwall.prototype.session = function(id, info, policy, callback) {
     callback: Returns either error or an instance of Session
     */
     if(!id) return callback(new Error("An Identifier is required to create a new session"));
-    callback(null, new Session(id, info, policy.bloc.assign));
+    callback(null, new Session(id, info, function(session){
+        policy.bloc.assign.apply(policy.bloc, [session]);
+    }));
 }
 
 blackwall.prototype.addFramework = function(name, framework) {
