@@ -28,7 +28,7 @@ var policy = firewall.addPolicy('policy_name', [
         name: 'rateLimiter',
         description: 'Limits Session Rate based on hits per minute',
         func: function(options, local, callback){
-            if(local.total >= options.rate.minute) {
+            if(local.total >= options.get('rate.minute')) {
                 callback("Max Number Of Hits Reached");
             }else{
                 local.total = (local.total)?local.total+1:1;
@@ -71,7 +71,9 @@ app.listen(3000);
 **enforce:** (framework:String, options:Object) - *returns a function to be applied when a new connection is made.*
 
 # Rules
-Rules are objects defined in policies that contain a function, its name and description. Rules are called parallel of each other with a options object, a unique rule local store and a callback. A rule can perform I/O operations if necessary and call the callback once done. If a callback has an error the session would be terminated and similarly if a session needs to be terminated use a callback(new Error('your error string')). A rule **func** Function is also provided with a session context. You can access data such as session information through this.information and session identifier through this.id and so on.
+Rules are objects defined in policies that contain a function, its name and description. Rules are called parallel of each other with a options object which contains a get function, a unique rule local store and a callback. A rule can perform I/O operations if necessary and call the callback once done. If a callback has an error the session would be terminated and similarly if a session needs to be terminated use a callback(new Error('your error string')). A rule **func** Function is also provided with a session context. You can access data such as session information through this.information and session identifier through this.id and so on.
+
+In order to receive specific options use options.get('key1.childkey2') format. For example when options = { rate: { max: 2 }} you can receive the max rate using options.get('rate.max') and so on. If a nested value does not exist the function will return *undefined*. This custom implementation is to prevent errors when options are not available.
 
 Any value stored in the local store is unique to the session identifier which identifies the Client and stores all session from that specific Client in a scope. Therefore you can modify the local value based on the Client's interaction without the need to create specific objects or storage methods of your own.
 e.g.
