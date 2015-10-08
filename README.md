@@ -50,11 +50,11 @@ app.listen(3000);
 
 # Methods
 
-**addPolicy:** (name:String, rules:Array, priority:Float) - *Creates a new Policy with the given rules and priority.*
+**addPolicy:** (name:String || policy:Object, rules:Array, priority:Float) RETURNS: Policy:Object - *Creates a new Policy with the given rules and priority. Note that policy names require to be completely unique, otherwise conflicts may occur.*
 
 **removePolicy:** (name:String || policy:Object) - *Removes a Policy.*
 
-**session:** (identifier:String, information:Object) -
+**session:** (identifier:String, information:Object) RETURNS: Session:Object -
 *Creates a new session with the given unique identifier (e.g. ip address) and information object attached to it.*
 
 **session->terminate** () - *Terminates a session*

@@ -37,18 +37,28 @@ blackwall.prototype.modifyRules = function BLACKWALL_POLICY_MODIFY_RULES(policy,
 
 blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, priority) {
     var _this = this;
-    // Make Priority Optional
-    if(!name) return callback(new Error('A name is required to create a new policy'));
-    if(!rules) rules = [];
-    if(!priority) priority = 0;
-    if(!!_.findWhere(this.bloc.policies, { name: name })) return _.findWhere(this.bloc.policies, { name: name });
-    
-    var policy = {
-        name: name,
-        rules: rules,
-        bloc: _this.bloc,
-        priority: priority
+    var policy;
+    // If Policy is provided as the first argument ignore Policy re-creation
+    if((arguments[0]) && (arguments[0].isBlackwallPolicy)) {
+        policy = arguments[0];
+    }else{
+        // Make Priority Optional
+        if(!name) return new Error('A name is required to create a new policy');
+        if(!rules) rules = [];
+        if(!priority) priority = 0;
+        // Name requires to be unique
+        if(!!_.findWhere(this.bloc.policies, { name: name })) return new Error('A policy with this name already exists in this instance. Please choose a unique name or pass the policy Object as a whole.');
+        
+        policy = {
+            name: name,
+            rules: rules,
+            bloc: _this.bloc,
+            priority: priority,
+            isBlackwallPolicy: true
+        }
     }
+    // Return if Policy is a part of the Bloc
+    if(!!_.findWhere(this.bloc.policies, { name: policy.name })) return _.findWhere(this.bloc.policies, { name: policy.name });
     
     _this.bloc.policies.push(policy)
     
