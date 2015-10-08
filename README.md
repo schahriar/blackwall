@@ -1,22 +1,14 @@
 <img src="https://raw.githubusercontent.com/schahriar/blackwall/master/blackwall.png" alt="Blackwall firewall" title="Blackwall" />
 
-**blackwall** is an **incoming*** programmable firewall module designed for NodeJS. You can integrate it into your TCP connections or as an ExpressJS middleware, define a few rules and enforce a good deal of security for your server application. It is still in Alpha and there will be major features and changes coming soon.
-
-\* *blackwall* currently only supports incoming connections. Outgoing support is planned for the first release.
+**blackwall** is a programmable firewall module designed for NodeJS. You can integrate it into your TCP connections, use it a an ExpressJS middleware, or even as a proxy server cleaning out your traffic before reaching the destination server or port. The setup is simple. Create a Policy with your own rule functions or some of the predefined rules (such as **ratelimiting**, **blacklisting**, **whitelisting**), create a session when a client connects and assign this session to the Policy. You can then add more information to this session for the rules and terminate it after you are done with the client. It is still in Beta so there will be major API changes in the future versions.
 
 # Features
-Currently included in the *Alpha* version:
+Currently included in the *Beta* version:
 
-1. ipv4 & ipv6 support
-2. List specific policies
-3. Events
-4. Frameworks
-5. Rate limiting
-6. Blacklisting
-7. Whitelisting
-8. Mass member add
-9. *Upcoming: Conditional policy change*
-10. *Upcoming: Dump and restore for policies*
+1. Session handling
+2. ipv4 & ipv6 support
+1. Custom Rules (as functions with their own storage)
+4. Frameworks (Ready to Use ExpressJS Framework)
 
 # Usage
 ```
@@ -31,90 +23,75 @@ var blackwall = require("blackwall");
 // Create a new instance of blackwall
 var firewall = new blackwall();
 // Modify Global list rules to 60 connections per minute
-firewall.modifyRule("global", { rate: { m:60 } }, true);
+var policy = firewall.addPolicy('policy_name', [
+    {
+        name: 'rateLimiter',
+        description: 'Limits Session Rate based on hits per minute',
+        func: function(global, local, callback){
+            clearTimeout(local.timeout);
+            if(local.total >= 10) {
+                callback("Max Number Of Hits Reached");
+            }else{
+                local.total = (local.total)?local.total+1:1;
+                callback(null, true);
+            }
+            // Possibly a better way than storing multiple Date Objects
+            local.timout = setTimeout(function(){
+                local.total = (local.total)?local.total-1:1;
+            }, 1000);
+        }
+    }
+])
 
-app.use(firewall.enforce("express"));
+app.use(firewall.enforce("express", policy));
 
 app.get('/', function (req, res) { res.send('Hello World!') })
 app.listen(3000);
 ```
 
-Enabling a custom instance of **blackwall** on a TCP server with defined rules:
-```javascript
-var net = require("net");
-var blackwall = require("blackwall");
-
-// Create a new instance of blackwall
-var firewall = new blackwall();
-// Modify Global list rules to 60 connections per minute
-firewall.modifyRule("global", { rate: { m:60 } }, true);
-
-var server = net.createServer(function(socket) {
-    // Defined custom rule
-    firewall.enforce()(
-        socket.remoteAddress,
-        function() { socket.end("FIREWALL"); },
-        function() { socket.write('connected'); }
-    )
-});
-server.listen(3100);
-```
-
 # Methods
 
-**addList:** (name:String, rules:Object, priority:Float, global:Bool, force:Bool) - *Creates a new list with the given rules and priority. Set force to true to modify if list exists.*
+**addPolicy:** (name:String, rules:Array, priority:Float) - *Creates a new Policy with the given rules and priority.*
 
-**removeList:** (name:String) - *Removes a list.*
+**removePolicy:** (name:String || policy:Object) - *Removes a Policy.*
 
-**modifyRule:** (listName:String, rule:Object, merge:Bool) - *Modifies rules for a given list. Set merge to true to merge existing and new rules.*
+**session:** (identifier:String, information:Object) -
+*Creates a new session with the given unique identifier (e.g. ip address) and information object attached to it.*
 
-**addMember:** (list:String, ip:String) -
-*Adds a member (ipv4 or ipv6 address) to a list.*
+**session->terminate** () - *Terminates a session*
 
-**removeMember:** (list:String, ip:String) -
-*Removes a member (ipv4 or ipv6 address) from a list.*
+**assign:** (session:Object, policy:Object) -
+*Assigns a policy to a session.*
 
 **addFramework:** (name:String, framework:Object) - *Adds a given framework to frameworks list. This can be later called through .enforce(framework-name)*
 
 **enforce:** (framework:String, options:Object) - *returns a function to be applied when a new connection is made.*
 
-**session:** (ip:String, callback:Function) - *Creates a session and returns two arguments (error, hasAccess) to the callback. (This is automatically done by the enforce function)*
-
-# Lists
-Lists are useful for assigning certain ips to specific rules. For example a list named *blacklist* can block all the members added to the list. Although *blacklist* is integrated by default you can create a new list named *blacklist* using the following code:
-
-
-```javascript
-var blackwall = require("blackwall");
-var firewall = new blackwall();
-
-// We'll use the force argument to replace the default blacklist
-// Arguments: name, rule, priority, global, force
-firewall.addList("blacklist", { block: true }, 1, false, true);
-
-// You can then add members using:
-firewall.addMember("blacklist", "127.0.0.2");
-
-// Any connection from the given ip will now be blocked
-```
-
-#### Priority
-Lists contain a priority value between 0 (last) and 1 (first). This value determines which rules will be assigned to a member. For example a priority of 1 should be used for whitelists/backlist a custom list with a value of 0.1xx to 0.9xx and 0 for the global list. This assures the following order:
-1. Whitelist/Blacklist
-2. Custom list
-3. Global
-
------------
-#### Global lists
-A list with global property will match all addresses. This should be generally used with a global set of rules that have a 0 priority value otherwise rules with lower priority will not be evaluated.
-
 # Rules
-Rules are objects defined in policies and assigned to lists. There is a rule-set for every list. For now rules accept the following parameters:
+Rules are objects defined in policies that contain a function, its name and description. Rules are called parallel of each other with a global store object, a unique rule local store and a callback. A rule can perform I/O operations if necessary and call the callback once done. If a callback has an error the session would be terminated and similarly if a session needs to be terminated use a callback(new Error('your error string')). A rule **func** Function is also provided with a session context. You can access data such as session information through this.information and session identifier through this.id and so on.
 
-**rate:** { d:Number, h:Number, m:Number, s:Number } - *rate can be used for rate-limiting. You can set a maximum of x Number of times per **d**ay **h**our **m**inute or **s**econd that a single address can gain access.*
-
-**block:** Bool - *Block can directly block access of addresses that fall under the list regardless of any other limits if set to **true**.*
-
+Any value stored in the local store is unique to the session identifier which identifies the Client and stores all session from that specific Client in a scope. Therefore you can modify the local value based on the Client's interaction without the need to create specific objects or storage methods of your own.
+e.g.
+```javascript
+var policy = firewall.addPolicy('name', [
+    {
+        name: 'store test',
+        description: 'logs the total number of sessions from the client every time a new session is created',
+        func: function(global, local, callback) {
+            if(!local.totalNumberOfSessions) local.totalNumberOfSessions = 0;
+            local.totalNumberOfSessions++;
+            console.log("TOTAL SESSIONS FROM", this.id, local.totalNumberOfSessions);
+        }
+    }
+])
+...
+// Output on every session
+// TOTAL SESSIONS FROM 127.0.0.1 1
+// TOTAL SESSIONS FROM 127.0.0.1 2
+// TOTAL SESSIONS FROM 127.0.0.1 3
+// TOTAL SESSIONS FROM 127.0.0.1 4
+// ...
+```
 
 # Frameworks
 Frameworks are modules that return a function that enables **blackwall** integration to 3rd-party systems. Currently **blackwall** is packaged with:
@@ -138,14 +115,11 @@ var onAccess = firewall.enforce();
 
 # What's next?
 
-Features planned for *Beta* version:
+Upcoming Features:
 
-1. Session based policies
-2. Ip range support for ipv6 and ipv4
-3. Custom denial of service response
-4. Proxy support
-5. Bandwidth limiting
-6. Concurrent connection limiting
+1. Clustering
+2. Events
+3. Proxy support
 
 <br>
 Features planned for *Stable Release* version:
