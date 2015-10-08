@@ -33,7 +33,7 @@ blackwall.prototype.modifyRules = function BLACKWALL_POLICY_MODIFY_RULES(policy,
     return policy;
 }
 
-blackwall.prototype.addPolicy = function(name, rules, priority, callback) {
+blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, priority, callback) {
     var _this = this;
     // Make Priority Optional
     if(!name) return callback(new Error('A name is required to create a new policy'));
@@ -55,14 +55,14 @@ blackwall.prototype.addPolicy = function(name, rules, priority, callback) {
     callback(null, this.policies[name]);
 }
 
-blackwall.prototype.removePolicy = function(policy) {
+blackwall.prototype.removePolicy = function BLACKWALL_POLICY_REMOVE(policy) {
     if(_.isObject(policy)) policy = policy.name;
     this.policies = _.omit(this.policies, function(o){
         return (o.name === policy.name);
     })
 }
 
-blackwall.prototype.session = function(id, info) {
+blackwall.prototype.session = function BLACKWALL_SESSION_NEW(id, info) {
     /* Allow for ambiguous identification */
     /* ARGUMENTS:
     id: identifier, An ip address or a value that represents the authenticated address (Not a Session ID)
@@ -78,17 +78,17 @@ blackwall.prototype.session = function(id, info) {
     return new Session(id, info);
 }
 
-blackwall.prototype.assign = function(session, policy) {
+blackwall.prototype.assign = function BLACKWALL_SESSION_ASSIGN(session, policy) {
     if((!session) || (!session.id)) return new Error("Session is not valid!");
     if(!policy) return new Error("Policy is not valid!");
     return policy.bloc.assign(session);
 }
 
-blackwall.prototype.addFramework = function(name, framework) {
+blackwall.prototype.addFramework = function BLACKWALL_FRAMEWORK_ADD(name, framework) {
     return frameworks[name] = framework;
 }
 
-blackwall.prototype.enforce = function(method, options) {
+blackwall.prototype.enforce = function BLACKWALL_ENFORCE(method, options) {
     if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].inbound))) return frameworks[method].inbound.apply(this, [options]); else if(!method) {
         // Use default/custom method
         return frameworks['custom'].inbound.apply(this, [options]);
