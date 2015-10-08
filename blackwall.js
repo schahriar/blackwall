@@ -18,7 +18,9 @@ var frameworks = {
 ////// Add dump and restore
 
 var blackwall = function() {
+    var _this = this;
     this.policies = new Object;
+    this.bloc = new Bloc();
     eventEmmiter.call(this);
 }
 
@@ -39,21 +41,23 @@ blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, prior
     if(!name) return callback(new Error('A name is required to create a new policy'));
     if(!rules) rules = [];
     if(!priority) priority = 0;
-    if(!!this.policies[name]) return this.policies[name];
+    if(!!_.findWhere(this.bloc.policies, { name: name })) return _.findWhere(this.bloc.policies, { name: name });
     
-    this.policies[name] = {
+    var policy = {
         name: name,
         rules: rules,
-        bloc: new Bloc(function() { return _this.policies[name] }),
+        bloc: _this.bloc,
         priority: priority
     }
     
-    return this.policies[name];
+    _this.bloc.policies.push(policy)
+    
+    return policy;
 }
 
 blackwall.prototype.removePolicy = function BLACKWALL_POLICY_REMOVE(policy) {
     if(_.isObject(policy)) policy = policy.name;
-    this.policies = _.omit(this.policies, function(o){
+    this.bloc.policies = _.omit(this.bloc.policies, function(o){
         return (o.name === policy.name);
     })
 }
