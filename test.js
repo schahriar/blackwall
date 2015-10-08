@@ -16,8 +16,8 @@ var firewall = new BlackWall();
 var policy = firewall.addPolicy('test', [{
     name: 'rateLimiter',
     description: 'Limits Session Rate based on hits per hour|minute|second',
-    func: function(global, local, callback){
-        if(local.totalHits >= 10) {
+    func: function(options, local, callback){
+        if(local.totalHits >= options.rate.max) {
             callback("Max Number Of Hits Reached");
         }else{
             local.totalHits = (local.totalHits)?local.totalHits+1:1;
@@ -28,7 +28,11 @@ var policy = firewall.addPolicy('test', [{
             local.totalHits = (local.totalHits)?local.totalHits-1:1;
         }, 1000);
     }
-}]);
+}], {
+    rate: {
+        max: 10
+    }
+});
 
 if(policy.constructor === Error) throw policy;
 

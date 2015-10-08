@@ -34,7 +34,7 @@ blackwall.prototype.modifyRules = function BLACKWALL_POLICY_MODIFY_RULES(policy,
     return policy;
 }
 
-blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, priority) {
+blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, options, priority) {
     var _this = this;
     var policy;
     // If Policy is provided as the first argument ignore Policy re-creation
@@ -44,6 +44,7 @@ blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, prior
         // Make Priority Optional
         if(!name) return new Error('A name is required to create a new policy');
         if(!rules) rules = [];
+        if(!options) options = {};
         if(!priority) priority = 0;
         // Name requires to be unique
         if(!!_.findWhere(this.bloc.policies, { name: name })) return new Error('A policy with this name already exists in this instance. Please choose a unique name or pass the policy Object as a whole.');
@@ -51,6 +52,7 @@ blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, prior
         policy = {
             name: name,
             rules: rules,
+            options: options,
             bloc: _this.bloc,
             priority: priority,
             isBlackwallPolicy: true

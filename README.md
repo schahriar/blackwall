@@ -27,8 +27,8 @@ var policy = firewall.addPolicy('policy_name', [
     {
         name: 'rateLimiter',
         description: 'Limits Session Rate based on hits per minute',
-        func: function(global, local, callback){
-            if(local.total >= 20) {
+        func: function(options, local, callback){
+            if(local.total >= options.rate.minute) {
                 callback("Max Number Of Hits Reached");
             }else{
                 local.total = (local.total)?local.total+1:1;
@@ -40,7 +40,11 @@ var policy = firewall.addPolicy('policy_name', [
             }, 60000);
         }
     }
-])
+], {
+    rate: {
+        minute: 20
+    }
+})
 
 app.use(firewall.enforce("express", policy));
 
@@ -50,7 +54,7 @@ app.listen(3000);
 
 # Methods
 
-**addPolicy:** (name:String || policy:Object, rules:Array, priority:Float) RETURNS: Policy:Object - *Creates a new Policy with the given rules and priority. Note that policy names require to be completely unique, otherwise conflicts may occur.*
+**addPolicy:** (name:String || policy:Object, rules:Array, options:Object, priority:Float) RETURNS: Policy:Object - *Creates a new Policy with the given rules and priority. Note that policy names require to be completely unique, otherwise conflicts may occur.*
 
 **removePolicy:** (name:String || policy:Object) - *Removes a Policy.*
 
@@ -67,7 +71,7 @@ app.listen(3000);
 **enforce:** (framework:String, options:Object) - *returns a function to be applied when a new connection is made.*
 
 # Rules
-Rules are objects defined in policies that contain a function, its name and description. Rules are called parallel of each other with a global store object, a unique rule local store and a callback. A rule can perform I/O operations if necessary and call the callback once done. If a callback has an error the session would be terminated and similarly if a session needs to be terminated use a callback(new Error('your error string')). A rule **func** Function is also provided with a session context. You can access data such as session information through this.information and session identifier through this.id and so on.
+Rules are objects defined in policies that contain a function, its name and description. Rules are called parallel of each other with a options object, a unique rule local store and a callback. A rule can perform I/O operations if necessary and call the callback once done. If a callback has an error the session would be terminated and similarly if a session needs to be terminated use a callback(new Error('your error string')). A rule **func** Function is also provided with a session context. You can access data such as session information through this.information and session identifier through this.id and so on.
 
 Any value stored in the local store is unique to the session identifier which identifies the Client and stores all session from that specific Client in a scope. Therefore you can modify the local value based on the Client's interaction without the need to create specific objects or storage methods of your own.
 e.g.
@@ -76,7 +80,7 @@ var policy = firewall.addPolicy('name', [
     {
         name: 'store test',
         description: 'logs the total number of sessions from the client every time a new session is created',
-        func: function(global, local, callback) {
+        func: function(options, local, callback) {
             if(!local.totalNumberOfSessions) local.totalNumberOfSessions = 0;
             local.totalNumberOfSessions++;
             console.log("TOTAL SESSIONS FROM", this.id, local.totalNumberOfSessions);
