@@ -69,7 +69,7 @@ blackwall.prototype.session = function(id, info) {
     // Check if ID is an IP
     if(ipaddr.isValid(id)) {
         // IF ipv6 -> Expand ipv6 address
-        id = (ipaddr.parse(id) === "ipv6")?ipaddr.parse(id).toNormalizedString():id;   
+        id = (ipaddr.parse(id).parts)?ipaddr.parse(id).toNormalizedString():id;   
     }
     return new Session(id, info);
 }
