@@ -24,9 +24,13 @@ var blackwall = function() {
 
 util.inherits(blackwall, eventEmmiter);
 
-blackwall.prototype.modifyRule = function(name, rules, merge) {
+blackwall.prototype.modifyRules = function BLACKWALL_POLICY_MODIFY_RULES(policy, rules, merge) {
     // If merge is true then merge current rules with new ones otherwise set to rule
-    return this.policies[name].rules = (merge)?_.defaults(this.policies[name].rules, rules):rules;
+    // Merge By Default
+    if(merge === undefined) merge = true;
+    if(!policy.rules) return new Error('Policy is invalid');
+    policy.rules = (merge)?_.defaults(policy.rules, rules):rules;
+    return policy;
 }
 
 blackwall.prototype.addPolicy = function(name, rules, priority, callback) {
