@@ -18,7 +18,6 @@ var frameworks = {
 ////// Add dump and restore
 
 var blackwall = function() {
-    var _this = this;
     this.policies = new Object;
     this.bloc = new Bloc();
     eventEmmiter.call(this);
