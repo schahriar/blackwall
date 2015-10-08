@@ -33,17 +33,13 @@ blackwall.prototype.modifyRules = function BLACKWALL_POLICY_MODIFY_RULES(policy,
     return policy;
 }
 
-blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, priority, callback) {
+blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, priority) {
     var _this = this;
     // Make Priority Optional
     if(!name) return callback(new Error('A name is required to create a new policy'));
     if(!rules) rules = [];
     if(!priority) priority = 0;
-    if((!callback) && (priority.constructor === Function)) {
-        callback = priority;
-        priority = 0;
-    }
-    if(!!this.policies[name]) return callback(null, this.policies[name]);
+    if(!!this.policies[name]) return this.policies[name];
     
     this.policies[name] = {
         name: name,
@@ -52,7 +48,7 @@ blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, prior
         priority: priority
     }
     
-    callback(null, this.policies[name]);
+    return this.policies[name];
 }
 
 blackwall.prototype.removePolicy = function BLACKWALL_POLICY_REMOVE(policy) {
