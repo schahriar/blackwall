@@ -22,13 +22,13 @@ var blackwall = require("blackwall");
 
 // Create a new instance of blackwall
 var firewall = new blackwall();
-// Modify Global list rules to 60 connections per minute
+// Create a new Policy with a single rule to limit connections from each Client to 20 per minute
 var policy = firewall.addPolicy('policy_name', [
     {
         name: 'rateLimiter',
         description: 'Limits Session Rate based on hits per minute',
         func: function(global, local, callback){
-            if(local.total >= 10) {
+            if(local.total >= 20) {
                 callback("Max Number Of Hits Reached");
             }else{
                 local.total = (local.total)?local.total+1:1;
@@ -37,7 +37,7 @@ var policy = firewall.addPolicy('policy_name', [
             // Possibly a better way than storing multiple Date Objects
             setTimeout(function(){
                 local.total = (local.total)?local.total-1:1;
-            }, 1000);
+            }, 60000);
         }
     }
 ])
