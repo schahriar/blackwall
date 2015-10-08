@@ -28,7 +28,6 @@ var policy = firewall.addPolicy('policy_name', [
         name: 'rateLimiter',
         description: 'Limits Session Rate based on hits per minute',
         func: function(global, local, callback){
-            clearTimeout(local.timeout);
             if(local.total >= 10) {
                 callback("Max Number Of Hits Reached");
             }else{
@@ -36,7 +35,7 @@ var policy = firewall.addPolicy('policy_name', [
                 callback(null, true);
             }
             // Possibly a better way than storing multiple Date Objects
-            local.timout = setTimeout(function(){
+            setTimeout(function(){
                 local.total = (local.total)?local.total-1:1;
             }, 1000);
         }
