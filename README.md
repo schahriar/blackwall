@@ -2,6 +2,8 @@
 
 **blackwall** is a programmable firewall module designed for NodeJS. You can integrate it into your TCP connections, use it a an ExpressJS middleware, or even as a proxy server cleaning out your traffic before reaching the destination server or port. The setup is simple. Create a Policy with your own rule functions or some of the predefined rules (such as **ratelimiting**, **blacklisting**, **whitelisting**), create a session when a client connects and assign this session to the Policy. You can then add more information to this session for the rules and terminate it after you are done with the client. It is still in Beta so there will be major API changes in the future versions.
 
+[![Build Status](https://travis-ci.org/schahriar/blackwall.svg)](https://travis-ci.org/schahriar/blackwall)
+
 # Features
 Currently included in the *Beta* version:
 
