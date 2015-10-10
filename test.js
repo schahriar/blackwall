@@ -5,6 +5,9 @@ var http = require('http');
 var net = require('net');
 var express = require('express');
 
+// NodeJS 0.10.x
+http.globalAgent.maxSockets = Infinity;
+
 var _ = require("lodash");
 var ipaddr = require('ipaddr.js');
 var moment = require('moment');
