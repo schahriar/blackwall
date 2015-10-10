@@ -18,6 +18,7 @@ module.exports = {
             })
             _this.assign(session, policy);
             if(session.terminated) return end();
+            else callback();
         }
     },
 }
