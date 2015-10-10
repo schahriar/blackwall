@@ -56,7 +56,7 @@ app.listen(3000);
 
 # Methods
 
-**policy:** (name:String, rules:Array, options:Object, priority:Float) RETURNS: Policy:Object - *Creates a new Policy with the given rules and priority.*
+**policy:** (name:String, rules:Array, options:Object) RETURNS: Policy:Object - *Creates a new Policy with the given rules and options.*
 
 **policy->swap** (policy:Object) - *Swaps this policy with another. This also affects all enforced frameworks, rules, options, etc.*
 

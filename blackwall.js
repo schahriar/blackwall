@@ -35,26 +35,23 @@ blackwall.prototype.modifyRules = function BLACKWALL_POLICY_MODIFY_RULES(policy,
     return policy;
 }
 
-blackwall.prototype.policy = function BLACKWALL_POLICY_ADD(name, rules, options, priority) {
+blackwall.prototype.policy = function BLACKWALL_POLICY_ADD(name, rules, options) {
     var _this = this;
     var policy;
-    // Make Priority Optional
+
     if(!name) return new Error('A name is required to create a new policy');
     if(!rules) rules = [];
     if(!options) options = {};
-    if(!priority) priority = 0;
     
     policy = {
         name: name,
         rules: rules,
         options: options,
         bloc: _this.bloc,
-        priority: priority,
         swap: function(newpolicy) {
             this.name = newpolicy.name;
             this.rules = newpolicy.rules;
             this.options = newpolicy.options;
-            this.priority = newpolicy.priority;
             return policy;
         },
         isBlackwallPolicy: true
