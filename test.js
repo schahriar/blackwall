@@ -73,6 +73,17 @@ app.get('/', function (req, res) { res.send('Hello World!') })
 app.listen(3000);
 ///
 
+/// TCP Server
+var server = net.createServer(function(socket) {
+    firewall.enforce(policy)(
+        socket.remoteAddress,
+        function() { socket.end("FIREWALL"); },
+        function() { socket.write('connected'); }
+    )
+});
+server.listen(3100);
+///
+
 describe('BlackWall Test Suite', function(){
     describe('Session & Member management checks', function(){
         it('should add member to specified list', function(){
@@ -130,6 +141,12 @@ describe('BlackWall Test Suite', function(){
                 res.statusCode.should.equal(200);
                 done();
             });
+        })
+        it('should run Custom Framework', function(done){
+            net.connect({port: 3100}).on('data', function(data) {
+                data.toString().should.equal('connected');
+                done();
+            })
         })
     });
 });
