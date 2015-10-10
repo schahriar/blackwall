@@ -35,43 +35,32 @@ blackwall.prototype.modifyRules = function BLACKWALL_POLICY_MODIFY_RULES(policy,
     return policy;
 }
 
-blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, options, priority) {
+blackwall.prototype.policy = function BLACKWALL_POLICY_ADD(name, rules, options, priority) {
     var _this = this;
     var policy;
-    // If Policy is provided as the first argument ignore Policy re-creation
-    if((arguments[0]) && (arguments[0].isBlackwallPolicy)) {
-        policy = arguments[0];
-    }else{
-        // Make Priority Optional
-        if(!name) return new Error('A name is required to create a new policy');
-        if(!rules) rules = [];
-        if(!options) options = {};
-        if(!priority) priority = 0;
-        // Name requires to be unique
-        if(!!_.findWhere(this.bloc.policies, { name: name })) return new Error('A policy with this name already exists in this instance. Please choose a unique name or pass the policy Object as a whole.');
-        
-        policy = {
-            name: name,
-            rules: rules,
-            options: options,
-            bloc: _this.bloc,
-            priority: priority,
-            isBlackwallPolicy: true
-        }
+    // Make Priority Optional
+    if(!name) return new Error('A name is required to create a new policy');
+    if(!rules) rules = [];
+    if(!options) options = {};
+    if(!priority) priority = 0;
+    
+    policy = {
+        name: name,
+        rules: rules,
+        options: options,
+        bloc: _this.bloc,
+        priority: priority,
+        swap: function(newpolicy) {
+            this.name = newpolicy.name;
+            this.rules = newpolicy.rules;
+            this.options = newpolicy.options;
+            this.priority = newpolicy.priority;
+            return policy;
+        },
+        isBlackwallPolicy: true
     }
-    // Return if Policy is a part of the Bloc
-    if(!!_.findWhere(this.bloc.policies, { name: policy.name })) return _.findWhere(this.bloc.policies, { name: policy.name });
-    
-    _this.bloc.policies.push(policy)
-    
+        
     return policy;
-}
-
-blackwall.prototype.removePolicy = function BLACKWALL_POLICY_REMOVE(policy) {
-    if(_.isObject(policy)) policy = policy.name;
-    this.bloc.policies = _.omit(this.bloc.policies, function(o){
-        return (o.name === policy.name);
-    })
 }
 
 blackwall.prototype.session = function BLACKWALL_SESSION_NEW(id, info) {
@@ -101,6 +90,7 @@ blackwall.prototype.addFramework = function BLACKWALL_FRAMEWORK_ADD(name, framew
 }
 
 blackwall.prototype.enforce = function BLACKWALL_ENFORCE(method, policy, options) {
+    this.bloc.policy = policy;
     if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].inbound))) return frameworks[method].inbound.apply(this, [policy, options]); else if(!method) {
         // Use default/custom method
         return frameworks['custom'].inbound.apply(this, [policy, options]);

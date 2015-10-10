@@ -29,11 +29,12 @@ var ipv4 = {
     },
     blocked: "192.0.2.0",
     blockedRange: "10.53.66.200",
+    allowed: "10.0.0.5",
     valid: "198.51.100.0"
 }
 
 var firewall = new BlackWall();
-var policy = firewall.addPolicy('test', [firewall.rules.blacklist, firewall.rules.rateLimiter], {
+var policy = firewall.policy('test', [firewall.rules.blacklist, firewall.rules.rateLimiter], {
     rate: {
         s: 10,
         m: 60,
@@ -42,6 +43,13 @@ var policy = firewall.addPolicy('test', [firewall.rules.blacklist, firewall.rule
     blacklist: {
         address: [ipv4.blocked],
         range: ['10.0.0.0/8']
+    }
+});
+
+var whitelistpolicy = firewall.policy('whitelist', [firewall.rules.whitelist, firewall.rules.rateLimiter], {
+    whitelist: {
+        address: [ipv4.allowed],
+        range: ['14.0.0.0/8']
     }
 });
 
@@ -166,6 +174,26 @@ describe('Predefined Rules Test Suite', function(){
         it('should block an ip from a blacklisted range', function(done) {
             http.get('http://localhost:3000?address=' + ipv4.blockedRange, function (res) {
                 res.statusCode.should.equal(503);
+                done();
+            });
+        })
+    })
+    describe('Whitelist', function() {
+        it('should swap policies', function() {
+            expect(policy.swap(whitelistpolicy).name).to.equal(whitelistpolicy.name);
+            expect(policy.swap(whitelistpolicy).priority).to.equal(whitelistpolicy.priority);
+            expect(policy.swap(whitelistpolicy).rules).to.deep.equal(whitelistpolicy.rules);
+            expect(policy.swap(whitelistpolicy).options).to.deep.equal(whitelistpolicy.options);
+        })
+        it('should block a non-whitelisted ip', function(done) {
+            http.get('http://localhost:3000?address=' + ipv4.valid, function (res) {
+                res.statusCode.should.equal(503);
+                done();
+            });
+        })
+        it('should allow a whitelisted ip', function(done) {
+            http.get('http://localhost:3000?address=' + ipv4.allowed, function (res) {
+                res.statusCode.should.equal(200);
                 done();
             });
         })

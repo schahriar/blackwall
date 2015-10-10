@@ -25,7 +25,7 @@ var blackwall = require("blackwall");
 // Create a new instance of blackwall
 var firewall = new blackwall();
 // Create a new Policy with a single rule to limit connections from each Client to 20 per minute
-var policy = firewall.addPolicy('policy_name', [
+var policy = firewall.policy('policy_name', [
     {
         name: 'rateLimiter',
         description: 'Limits Session Rate based on hits per minute',
@@ -56,7 +56,9 @@ app.listen(3000);
 
 # Methods
 
-**addPolicy:** (name:String || policy:Object, rules:Array, options:Object, priority:Float) RETURNS: Policy:Object - *Creates a new Policy with the given rules and priority. Note that policy names require to be completely unique, otherwise conflicts may occur.*
+**policy:** (name:String, rules:Array, options:Object, priority:Float) RETURNS: Policy:Object - *Creates a new Policy with the given rules and priority.*
+
+**policy->swap** (policy:Object) - *Swaps this policy with another. This also affects all enforced frameworks, rules, options, etc.*
 
 **removePolicy:** (name:String || policy:Object) - *Removes a Policy.*
 
@@ -82,7 +84,7 @@ In order to receive specific options use options.get('key1.childkey2') format. F
 Any value stored in the local store is unique to the session identifier which identifies the Client and stores all session from that specific Client in a scope. Therefore you can modify the local value based on the Client's interaction without the need to create specific objects or storage methods of your own.
 e.g.
 ```javascript
-var policy = firewall.addPolicy('name', [
+var policy = firewall.policy('name', [
     {
         name: 'store test',
         description: 'logs the total number of sessions from the client every time a new session is created',
