@@ -32,7 +32,9 @@ function IP_MATCH_ALL(list, rangeList, ip) {
             try {
                 match = _IP_.match(ipaddr.parseCIDR(range));
                 if(match === true) return false;
-            }catch(e) {}
+            }catch(e) {
+                console.log("Warning", e)
+            }
         })
         
         return match;
