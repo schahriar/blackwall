@@ -179,7 +179,7 @@ describe('Predefined Rules Test Suite', function(){
         })
     })
     describe('Whitelist', function() {
-        it('should swap policies', function() {
+        it('*should swap policies', function() {
             expect(policy.swap(whitelistpolicy).name).to.equal(whitelistpolicy.name);
             expect(policy.swap(whitelistpolicy).priority).to.equal(whitelistpolicy.priority);
             expect(policy.swap(whitelistpolicy).rules).to.deep.equal(whitelistpolicy.rules);
