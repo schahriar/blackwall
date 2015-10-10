@@ -114,7 +114,7 @@ Frameworks are modules that return a function that enables **blackwall** integra
 You can enforce **blackwall** using a custom code:
 ```javascript
 var firewall = new blackwall();
-var onAccess = firewall.enforce();
+var onAccess = firewall.enforce(policy);
 
 // Call onAccess to run firewall
 /*  onAccess(
