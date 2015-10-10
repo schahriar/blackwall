@@ -2,16 +2,22 @@ module.exports = {
     name: "custom",
     framework: true,
 
-    inbound: function(options) {
+    inbound: function(policy, options) {
         var _this = this;
 
         return function(ip, end, callback) {
-            // Perhaps in future versions Blackwall could request for all ips in one go
-            _this.session(ip, function(error, hasAccess) {
-                // Add error as first argument
-                if(hasAccess === true) callback(error);
-                else end();
+            var session = _this.session(ip, {
+                ip: ip
+            });
+            // Handle Express Errors better
+            if(session.constructor === Error) {
+                return end(session.message);
+            }
+            session.once('terminate', function(reason) {
+                end(reason);
             })
+            _this.assign(session, policy);
+            if(session.terminated) return end();
         }
     },
 }
