@@ -31,7 +31,8 @@ var ipv4 = {
     blockedRange: "10.53.66.200",
     allowed: "10.0.0.5",
     allowedRange: "14.255.9.255",
-    valid: "198.51.100.0"
+    valid: "198.51.100.0",
+    invalid: "10.256.0.0"
 }
 
 var firewall = new BlackWall();
@@ -201,6 +202,18 @@ describe('Predefined Rules Test Suite', function(){
         it('should allow a whitelisted range', function(done) {
             http.get('http://localhost:3000?address=' + ipv4.allowedRange, function (res) {
                 res.statusCode.should.equal(200);
+                done();
+            });
+        })
+        it('should block an invalid ipv4', function(done) {
+            http.get('http://localhost:3000?address=' + ipv4.invalid, function (res) {
+                res.statusCode.should.equal(503);
+                done();
+            });
+        })
+        it('should block an invalid ipv6', function(done) {
+            http.get('http://localhost:3000?address=' + ipv6.invalid, function (res) {
+                res.statusCode.should.equal(503);
                 done();
             });
         })
