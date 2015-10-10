@@ -30,6 +30,7 @@ var ipv4 = {
     blocked: "192.0.2.0",
     blockedRange: "10.53.66.200",
     allowed: "10.0.0.5",
+    allowedRange: "14.255.9.255",
     valid: "198.51.100.0"
 }
 
@@ -193,6 +194,12 @@ describe('Predefined Rules Test Suite', function(){
         })
         it('should allow a whitelisted ip', function(done) {
             http.get('http://localhost:3000?address=' + ipv4.allowed, function (res) {
+                res.statusCode.should.equal(200);
+                done();
+            });
+        })
+        it('should allow a whitelisted range', function(done) {
+            http.get('http://localhost:3000?address=' + ipv4.allowedRange, function (res) {
                 res.statusCode.should.equal(200);
                 done();
             });
