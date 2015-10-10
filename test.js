@@ -15,7 +15,9 @@ var expect = chai.expect;
 var firewall = new BlackWall();
 var policy = firewall.addPolicy('test', [firewall.rules.rateLimiter], {
     rate: {
-        s: 10
+        s: 10,
+        m: 60,
+        h: 3000
     }
 });
 
@@ -49,17 +51,6 @@ app.use(firewall.enforce("express", policy, { unsafe: true }));
 
 app.get('/', function (req, res) { res.send('Hello World!') })
 app.listen(3000);
-///
-
-/// TCP Server
-/*var server = net.createServer(function(socket) {
-    firewall.enforce()(
-        socket.remoteAddress,
-        function() { socket.end("FIREWALL"); },
-        function() { socket.write('connected'); }
-    )
-});
-server.listen(3100);*/
 ///
 
 describe('BlackWall Test Suite', function(){
@@ -112,16 +103,27 @@ describe('BlackWall Test Suite', function(){
         })
     })
 
-    describe('ExpressJS firewall checks', function(){
+    describe('Framework checks', function(){
         this.timeout(5000);
-        it('should allow on first call', function(done){
+        it('should run Express', function(done){
             http.get('http://localhost:3000', function (res) {
                 res.statusCode.should.equal(200);
                 done();
             });
         })
-        
-        it('should deny over 10 calls a second [defined rule]', function(done){
+    });
+});
+
+describe('Predefined Rules Test Suite', function(){
+    this.timeout(5000);
+    describe('RateLimiter', function() {
+        it('should allow initial connection', function(done) {
+            http.get('http://localhost:3000', function (res) {
+                res.statusCode.should.equal(200);
+                done();
+            });
+        })
+        it('should ignore if more than 10 connections are made within a second', function(done) {
             for(i=0; i<10; i++) http.get('http://localhost:3000');
             http.get('http://localhost:3000', function (res) {
                 res.statusCode.should.equal(503);
@@ -137,59 +139,5 @@ describe('BlackWall Test Suite', function(){
                 });
             }, 1200);
         })
-    });
-
-/* describe('TCP firewall checks', function(){
-        this.timeout(10000);
-        it('should allow on first call', function(done){
-            net.connect({port: 3100}).on('data', function(data) {
-                data.toString().should.equal('connected');
-                done();
-            })
-        })
-        it('should deny over 10 calls a second [defined rule]', function(done){
-            for(c=0; c<10; c++) net.connect({port: 3100});
-            net.connect({port: 3100}).on('close', function(had_error) {
-                expect(had_error).to.be.false;
-                done();
-            })
-        })
-        it('should allow < 10 calls after a second', function(done){
-            setTimeout(function(){
-                for(i=0; i<4; i++) net.connect({port: 3100});
-                net.connect({port: 3100}).on('data', function(data) {
-                    data.toString().should.equal('connected');
-                    done();
-                })
-            }, 1200);
-        })
-    });*/
-
-    /*describe('Whitelist ip firewall checks', function(){
-        this.timeout(5000);
-        it('should allow on first call', function(done){
-            http.get('http://localhost:3000/?address=240.24.24.24', function (res) {
-                res.statusCode.should.equal(200);
-                done();
-            });
-        })
-        it('should not allow after whitelisting', function(done){
-            // Create a whitelist
-            firewall.addList("whitelist", rules.whitelist, 1, false);
-
-            http.get('http://localhost:3000/?address=240.24.24.24', function (res) {
-                res.statusCode.should.equal(503);
-                done();
-            });
-        })
-        it('should allow listed members after whitelisting', function(done){
-            // Whitelist 240.24.24.200 only
-            firewall.addMember("whitelist", "240.24.24.200");
-
-            http.get('http://localhost:3000/?address=240.24.24.200', function (res) {
-                res.statusCode.should.equal(200);
-                done();
-            });
-        })
-    });*/
-});
+    })
+})
