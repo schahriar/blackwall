@@ -13,7 +13,10 @@ module.exports = {
                 ip: address
             });
             // Handle Express Errors better
-            if(session.constructor === Error) return console.log("SESSION ERROR:", session.message);
+            if(session.constructor === Error) {
+                 console.log("SESSION ERROR:", session.message);
+                 return res.status(503).end();
+            }
             session.on('terminate', function() {
                 res.status(503).end();
             })
