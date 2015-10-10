@@ -13,7 +13,7 @@ module.exports = {
             if(session.constructor === Error) {
                 return end(session.message);
             }
-            session.once('terminate', function(reason) {
+            session.on('terminate', function(reason) {
                 end(reason);
             })
             _this.assign(session, policy);
