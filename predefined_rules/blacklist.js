@@ -31,6 +31,7 @@ function IP_MATCH_ALL(list, rangeList, ip) {
             // Unfortunately ipaddr.js likes to throw too often
             try {
                 match = _IP_.match(ipaddr.parseCIDR(range));
+                if(match === true) return false;
             }catch(e) {}
         })
         
