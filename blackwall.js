@@ -90,10 +90,18 @@ blackwall.prototype.addFramework = function BLACKWALL_FRAMEWORK_ADD(name, framew
 }
 
 blackwall.prototype.enforce = function BLACKWALL_ENFORCE(method, policy, options) {
-    this.bloc.policy = policy;
-    if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].inbound))) return frameworks[method].inbound.apply(this, [policy, options]); else if(!method) {
+    if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].inbound))) {
+        this.bloc.policy = policy;
+        return frameworks[method].inbound.apply(this, [policy, options]);
+    } else if((_.isObject(method)) && (method.isBlackwallPolicy === true)) {
+        // Method is a Policy, Shift arguments
+        policy = method;
+        options = policy;
+        this.bloc.policy = policy;
         // Use default/custom method
         return frameworks['custom'].inbound.apply(this, [policy, options]);
+    }else{
+        throw new Error("A Framework And/Or Policy is required.");
     }
 }
 
