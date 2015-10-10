@@ -12,17 +12,6 @@ var moment = require('moment');
 var should = chai.should();
 var expect = chai.expect;
 
-var firewall = new BlackWall();
-var policy = firewall.addPolicy('test', [firewall.rules.rateLimiter], {
-    rate: {
-        s: 10,
-        m: 60,
-        h: 3000
-    }
-});
-
-if(policy.constructor === Error) throw policy;
-
 var ipv6 = {
     valid: "2001:0db8::0001",
     validAlt: "fdb3:837:c302::48",
@@ -34,8 +23,26 @@ var ipv6 = {
 var ipv4 = {
     loop: function(i) {
         return "188.88." + Math.floor(i/255) + "." + i%255;
-    }
+    },
+    blocked: "192.0.2.0",
+    blockedRange: "10.53.66.200",
+    valid: "198.51.100.0"
 }
+
+var firewall = new BlackWall();
+var policy = firewall.addPolicy('test', [firewall.rules.blacklist, firewall.rules.rateLimiter], {
+    rate: {
+        s: 10,
+        m: 60,
+        h: 3000
+    },
+    blacklist: {
+        address: [ipv4.blocked],
+        range: ['10.0.0.0/8']
+    }
+});
+
+if(policy.constructor === Error) throw policy;
 
 /// Express Server
 var app = express();
@@ -138,6 +145,26 @@ describe('Predefined Rules Test Suite', function(){
                     done();
                 });
             }, 1200);
+        })
+    })
+    describe('Blacklist', function() {
+        it('should block a blacklisted ip', function(done) {
+            http.get('http://localhost:3000?address=' + ipv4.blocked, function (res) {
+                res.statusCode.should.equal(503);
+                done();
+            });
+        })
+        it('should allow a normal ip', function(done) {
+            http.get('http://localhost:3000?address=' + ipv4.valid, function (res) {
+                res.statusCode.should.equal(200);
+                done();
+            });
+        })
+        it('should block an ip from a blacklisted range', function(done) {
+            http.get('http://localhost:3000?address=' + ipv4.blockedRange, function (res) {
+                res.statusCode.should.equal(503);
+                done();
+            });
         })
     })
 })
