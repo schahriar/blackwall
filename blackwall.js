@@ -4,6 +4,7 @@ var util = require("util");
 var ipaddr = require('ipaddr.js');
 var Bloc = require("./lib/bloc");
 var Session = require("./lib/session");
+var rules = require("./predefined_rules/index.js");
 
 /// Packaged Frameworks
 var frameworks = {
@@ -105,5 +106,7 @@ blackwall.prototype.enforce = function BLACKWALL_ENFORCE(method, options) {
         return frameworks['custom'].inbound.apply(this, [options]);
     }
 }
+
+blackwall.prototype.rules = rules;
 
 module.exports = blackwall;

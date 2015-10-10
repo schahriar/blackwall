@@ -13,25 +13,9 @@ var should = chai.should();
 var expect = chai.expect;
 
 var firewall = new BlackWall();
-var policy = firewall.addPolicy('test', [{
-    name: 'rateLimiter',
-    description: 'Limits Session Rate based on hits per hour|minute|second',
-    groups: ['analytics'],
-    func: function(options, local, analytics, callback){
-        if(local.totalHits >= options.get('rate.max')) {
-            callback("Max Number Of Hits Reached");
-        }else{
-            local.totalHits = (local.totalHits)?local.totalHits+1:1;
-            callback(null, true);
-        }
-        // Possibly a better way than storing multiple Date Objects
-        setTimeout(function(){
-            local.totalHits = (local.totalHits)?local.totalHits-1:1;
-        }, 1000);
-    }
-}], {
+var policy = firewall.addPolicy('test', [firewall.rules.rateLimiter], {
     rate: {
-        max: 10
+        s: 10
     }
 });
 
