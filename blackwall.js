@@ -100,10 +100,10 @@ blackwall.prototype.addFramework = function BLACKWALL_FRAMEWORK_ADD(name, framew
     return frameworks[name] = framework;
 }
 
-blackwall.prototype.enforce = function BLACKWALL_ENFORCE(method, options) {
-    if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].inbound))) return frameworks[method].inbound.apply(this, [options]); else if(!method) {
+blackwall.prototype.enforce = function BLACKWALL_ENFORCE(method, policy, options) {
+    if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].inbound))) return frameworks[method].inbound.apply(this, [policy, options]); else if(!method) {
         // Use default/custom method
-        return frameworks['custom'].inbound.apply(this, [options]);
+        return frameworks['custom'].inbound.apply(this, [policy, options]);
     }
 }
 
