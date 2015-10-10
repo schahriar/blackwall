@@ -10,7 +10,6 @@ http.globalAgent.maxSockets = Infinity;
 
 var _ = require("lodash");
 var ipaddr = require('ipaddr.js');
-var moment = require('moment');
 
 var should = chai.should();
 var expect = chai.expect;
