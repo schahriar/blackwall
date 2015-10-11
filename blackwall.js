@@ -87,10 +87,10 @@ blackwall.prototype.addFramework = function BLACKWALL_FRAMEWORK_ADD(name, framew
 }
 
 blackwall.prototype.enforce = function BLACKWALL_ENFORCE(method, policy, options) {
-    if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].inbound))) {
+    if((_.isPlainObject(frameworks[method])) && (_.isFunction(frameworks[method].inbound))) {
         this.bloc.policy = policy;
         return frameworks[method].inbound.apply(this, [policy, options]);
-    } else if((_.isObject(method)) && (method.isBlackwallPolicy === true)) {
+    } else if((_.isPlainObject(method)) && (method.isBlackwallPolicy === true)) {
         // Method is a Policy, Shift arguments
         policy = method;
         options = policy;
