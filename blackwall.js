@@ -18,9 +18,9 @@ var frameworks = {
 /////// Add session-based policies
 ////// Add dump and restore
 
-var blackwall = function() {
+var blackwall = function(storageHandler) {
     this.policies = new Object;
-    this.bloc = new Bloc();
+    this.bloc = new Bloc(storageHandler);
     eventEmmiter.call(this);
 }
 
