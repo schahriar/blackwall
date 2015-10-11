@@ -28,17 +28,22 @@ module.exports = {
             analytics.time.push(this.createdAt);
         };
         // Prevent Computation if no Options are passed
-        if(!options.get('rate')) return callback(null, true);
-        
-        // Fast Compare
-        if(FAST_TIME_COMPARE(analytics.time[analytics.time.length - +options.get('rate.s')], 1000)) {
-            callback("Max Number Of Hits Per Second Reached");
-        }else if (FAST_TIME_COMPARE(analytics.time[analytics.time.length - +options.get('rate.m')], 60000)){
-            callback("Max Number Of Hits Per Minute Reached");
-        }else if (FAST_TIME_COMPARE(analytics.time[analytics.time.length - +options.get('rate.h')], 3600000)){
-            callback("Max Number Of Hits Per Hour Reached");
-        }else{
-            callback(null, true);
-        }
+        options.get('rate', function(error, rate) {
+            if(error) return callback(error);
+            // If Rate is not defined ignore
+            if(!rate) return callback(null, true);
+            if(!_.isPlainObject(rate)) return callback("Option->Rate is not an object");
+            
+            // Fast Compare
+            if(FAST_TIME_COMPARE(analytics.time[analytics.time.length - +rate.s], 1000)) {
+                callback("Max Number Of Hits Per Second Reached");
+            }else if (FAST_TIME_COMPARE(analytics.time[analytics.time.length - +rate.m], 60000)){
+                callback("Max Number Of Hits Per Minute Reached");
+            }else if (FAST_TIME_COMPARE(analytics.time[analytics.time.length - +rate.h], 3600000)){
+                callback("Max Number Of Hits Per Hour Reached");
+            }else{
+                callback(null, true);
+            }
+        })
     }
 }

@@ -45,19 +45,23 @@ module.exports = {
     name: 'blacklist',
     description: 'Limits Sessions Based on IP Address of the Client. If a matching IP Address or Range is found the session will be terminated otherwise it will be let through. Ranges are based on CIDR http://wikipedia.org/wiki/Classless_Inter-Domain_Routing',
     func: function(options, local, callback){
-        if(!options.get('blacklist')) return callback(null, true);
-        // IF IP CAN'T BE VALIDATED
-        if((!this.information.ip) || (!ipaddr.isValid(this.information.ip))) {
-            return callback("IP Address is invalid");
-        }
-        
-        // Process Mapped ipv4 mapped ipv6 ips to ipv4 ips e.g. (::ffff:127.0.0.1 to 127.0.0.1)
-        if(this.information.process === true) this.information.ip = ipaddr.process(this.information.ip).toString();
-        
-        if(IP_MATCH_ALL(options.get('blacklist.address'), options.get('blacklist.range'), this.information.ip)) {
-            callback("IP is Blacklisted!");
-        }else{
-            callback(null, true);
-        }
+        var session = this;
+        options.get('blacklist', function(error, blacklist) {
+            if(error) return callback(error);
+            
+            // IF IP CAN'T BE VALIDATED
+            if((!session.information.ip) || (!ipaddr.isValid(session.information.ip))) {
+                return callback("IP Address is invalid");
+            }
+            
+            // Process Mapped ipv4 mapped ipv6 ips to ipv4 ips e.g. (::ffff:127.0.0.1 to 127.0.0.1)
+            if(session.information.process === true) session.information.ip = ipaddr.process(session.information.ip).toString();
+            
+            if(IP_MATCH_ALL(blacklist.address, blacklist.range, session.information.ip)) {
+                callback("IP is Blacklisted!");
+            }else{
+                callback(null, true);
+            }
+        })
     }
 }
