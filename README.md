@@ -27,24 +27,29 @@ var firewall = new blackwall();
 // Create a new Policy with a single rule to limit connections from each Client to 20 per minute
 var policy = firewall.policy('policy_name', [
     {
-        name: 'rateLimiter',
-        description: 'Limits Session Rate based on hits per minute',
+        name: 'SimpleRateLimiter',
+        description: 'Limits Session Rate based on hits per minute. Use ratelimiter rule for production.',
         func: function(options, local, callback){
-            if(local.total >= options.get('rate.minute')) {
-                callback("Max Number Of Hits Reached");
-            }else{
-                local.total = (local.total)?local.total+1:1;
-                callback(null, true);
-            }
-            // Possibly a better way than storing multiple Date Objects
-            setTimeout(function(){
-                local.total = (local.total)?local.total-1:1;
-            }, 60000);
+            options.get('rate', function(error, rate) {
+                if(error) callback(error);
+                // Don't Force Rule if Rate option is not set
+                if(!rate) callback(null, true);
+                if(local.total >= rate.m) {
+                    callback("Max Number Of Hits Reached");
+                }else{
+                    local.total = (local.total)?local.total+1:1;
+                    callback(null, true);
+                }
+                // Possibly a better way than storing multiple Date Objects
+                setTimeout(function(){
+                    local.total = (local.total)?local.total-1:1;
+                }, 60000);
+            })
         }
     }
 ], {
     rate: {
-        minute: 20
+        m: 20
     }
 })
 
@@ -79,7 +84,7 @@ Rules are objects defined in policies that contain a function, its name and desc
 
 Alternatively you can pass a group String or groups Array to share a common object with other rule functions operating under the same storage values. This can reduce the storage load as multiple rules are applied.
 
-In order to receive specific options use options.get('key1.childkey2') format. For example when options = { rate: { max: 2 }} you can receive the max rate using options.get('rate.max') and so on. If a nested value does not exist the function will return *undefined*. This custom implementation is to prevent errors when options are not available.
+In order to receive specific options use options.get('key1.childkey2', callback) format. For example when options = { rate: { max: 2 }} you can receive the max rate using options.get('rate.max', callback) and so on. If a nested value does not exist the function will return *undefined*. This custom implementation is to prevent errors when options are not available and allows for database implementation to enable scaling.
 
 Any value stored in the local store is unique to the session identifier which identifies the Client and stores all session from that specific Client in a scope. Therefore you can modify the local value based on the Client's interaction without the need to create specific objects or storage methods of your own.
 e.g.
