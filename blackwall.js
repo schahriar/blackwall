@@ -76,10 +76,10 @@ blackwall.prototype.session = function BLACKWALL_SESSION_NEW(id, info) {
     return new Session(id, info);
 }
 
-blackwall.prototype.assign = function BLACKWALL_SESSION_ASSIGN(session, policy) {
+blackwall.prototype.assign = function BLACKWALL_SESSION_ASSIGN(session, policy, callback) {
     if((!session) || (!session.id)) return new Error("Session is not valid!");
     if(!policy) return new Error("Policy is not valid!");
-    return policy.bloc.assign(session);
+    policy.bloc.assign(session, callback);
 }
 
 blackwall.prototype.addFramework = function BLACKWALL_FRAMEWORK_ADD(name, framework) {
