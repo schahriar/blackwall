@@ -48,6 +48,7 @@ module.exports = {
         var session = this;
         options.get('blacklist', function(error, blacklist) {
             if(error) return callback(error);
+            if(!blacklist) return callback(null, true);
             
             // IF IP CAN'T BE VALIDATED
             if((!session.information.ip) || (!ipaddr.isValid(session.information.ip))) {
