@@ -27,7 +27,7 @@ var blackwall = require("blackwall");
 // Create a new instance of blackwall
 var firewall = new blackwall();
 // Create a new Policy from the predefined policy 'rateLimier' with a single rule to limit connections from every Client to 20 per minute
-var policy = firewall.policy('policy_name', [rateLimiter], {
+var policy = firewall.policy('policy_name', [firewall.rules.rateLimiter], {
     rate: {
         m: 20
     }
@@ -61,6 +61,28 @@ app.listen(3000);
 
 # Rules
 Rules are objects defined in policies that contain a function, its name and description. Rules are called parallel of each other with a options object which contains a get function, a unique rule local store and a callback. A rule can perform I/O operations if necessary and call the callback once done. If a callback has an error the session would be terminated and similarly if a session needs to be terminated use a callback(new Error('your error string')). A rule **func** Function is also provided with a session context. You can access data such as session information through this.information and session identifier through this.id and so on.
+
+### Predefined Rules
+Predefined rules are available through -instancename-**.rules.**-rulename-
+e.g.
+```javascript
+var firewall = new blackwall();
+var blacklist = firewall.rules.blacklist;
+```
+Currently these rules are predefined (names are case-sensitive):
+- blacklist
+        Options: blacklist:Object ->
+        blacklist.address:Array (Array of individual ips)
+        blacklist.range:Array (CIDR compatible ranges)
+- whitelist
+        Options: whitelist:Object ->
+        whitelist.address:Array (Array of individual ips)
+        whitelist.range:Array (CIDR compatible ranges)
+- rateLimiter
+        Options: rate:Object ->
+        rate.s:Number (Maximum Sessions per second)
+        rate.m:Number (Maximum Sessions per minute)
+        rate.h:Number (Maximum Sessions per hour)
 
 Alternatively you can pass a group String or groups Array to share a common object with other rule functions operating under the same storage values. This can reduce the storage load as multiple rules are applied.
 
