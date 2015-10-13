@@ -16,9 +16,10 @@ module.exports = {
             session.on('terminate', function(reason) {
                 end(reason);
             })
-            _this.assign(session, policy);
-            if(session.terminated) return end();
-            else callback();
+            _this.assign(session, policy, function() {
+                if(session.terminated) return end();
+                else callback(); 
+            });
         }
     },
 }

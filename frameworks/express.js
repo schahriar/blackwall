@@ -20,9 +20,10 @@ module.exports = {
             session.on('terminate', function() {
                 res.status(503).end();
             })
-            _this.assign(session, policy);
-            if(session.terminated) return res.status(503).end();
-            next();
+            _this.assign(session, policy, function() {
+                if(session.terminated) return res.status(503).end();
+                next();
+            });
         }
     },
 }
