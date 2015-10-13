@@ -4,6 +4,7 @@ var util = require("util");
 var ipaddr = require('ipaddr.js');
 var Bloc = require("./lib/bloc");
 var Session = require("./lib/session");
+var rules = require("./predefined_rules/index.js");
 
 /// Packaged Frameworks
 var frameworks = {
@@ -17,9 +18,9 @@ var frameworks = {
 /////// Add session-based policies
 ////// Add dump and restore
 
-var blackwall = function() {
+var blackwall = function(storageHandler) {
     this.policies = new Object;
-    this.bloc = new Bloc();
+    this.bloc = new Bloc(storageHandler);
     eventEmmiter.call(this);
 }
 
@@ -34,43 +35,29 @@ blackwall.prototype.modifyRules = function BLACKWALL_POLICY_MODIFY_RULES(policy,
     return policy;
 }
 
-blackwall.prototype.addPolicy = function BLACKWALL_POLICY_ADD(name, rules, options, priority) {
+blackwall.prototype.policy = function BLACKWALL_POLICY_ADD(name, rules, options) {
     var _this = this;
     var policy;
-    // If Policy is provided as the first argument ignore Policy re-creation
-    if((arguments[0]) && (arguments[0].isBlackwallPolicy)) {
-        policy = arguments[0];
-    }else{
-        // Make Priority Optional
-        if(!name) return new Error('A name is required to create a new policy');
-        if(!rules) rules = [];
-        if(!options) options = {};
-        if(!priority) priority = 0;
-        // Name requires to be unique
-        if(!!_.findWhere(this.bloc.policies, { name: name })) return new Error('A policy with this name already exists in this instance. Please choose a unique name or pass the policy Object as a whole.');
-        
-        policy = {
-            name: name,
-            rules: rules,
-            options: options,
-            bloc: _this.bloc,
-            priority: priority,
-            isBlackwallPolicy: true
-        }
-    }
-    // Return if Policy is a part of the Bloc
-    if(!!_.findWhere(this.bloc.policies, { name: policy.name })) return _.findWhere(this.bloc.policies, { name: policy.name });
-    
-    _this.bloc.policies.push(policy)
-    
-    return policy;
-}
 
-blackwall.prototype.removePolicy = function BLACKWALL_POLICY_REMOVE(policy) {
-    if(_.isObject(policy)) policy = policy.name;
-    this.bloc.policies = _.omit(this.bloc.policies, function(o){
-        return (o.name === policy.name);
-    })
+    if(!name) return new Error('A name is required to create a new policy');
+    if(!rules) rules = [];
+    if(!options) options = {};
+    
+    policy = {
+        name: name,
+        rules: rules,
+        options: options,
+        bloc: _this.bloc,
+        swap: function(newpolicy) {
+            this.name = newpolicy.name;
+            this.rules = newpolicy.rules;
+            this.options = newpolicy.options;
+            return policy;
+        },
+        isBlackwallPolicy: true
+    }
+        
+    return policy;
 }
 
 blackwall.prototype.session = function BLACKWALL_SESSION_NEW(id, info) {
@@ -89,21 +76,32 @@ blackwall.prototype.session = function BLACKWALL_SESSION_NEW(id, info) {
     return new Session(id, info);
 }
 
-blackwall.prototype.assign = function BLACKWALL_SESSION_ASSIGN(session, policy) {
+blackwall.prototype.assign = function BLACKWALL_SESSION_ASSIGN(session, policy, callback) {
     if((!session) || (!session.id)) return new Error("Session is not valid!");
     if(!policy) return new Error("Policy is not valid!");
-    return policy.bloc.assign(session);
+    policy.bloc.assign(session, callback);
 }
 
 blackwall.prototype.addFramework = function BLACKWALL_FRAMEWORK_ADD(name, framework) {
     return frameworks[name] = framework;
 }
 
-blackwall.prototype.enforce = function BLACKWALL_ENFORCE(method, options) {
-    if((_.isObject(frameworks[method])) && (_.isFunction(frameworks[method].inbound))) return frameworks[method].inbound.apply(this, [options]); else if(!method) {
+blackwall.prototype.enforce = function BLACKWALL_ENFORCE(method, policy, options) {
+    if((_.isPlainObject(frameworks[method])) && (_.isFunction(frameworks[method].inbound))) {
+        this.bloc.policy = policy;
+        return frameworks[method].inbound.apply(this, [policy, options]);
+    } else if((_.isPlainObject(method)) && (method.isBlackwallPolicy === true)) {
+        // Method is a Policy, Shift arguments
+        policy = method;
+        options = policy;
+        this.bloc.policy = policy;
         // Use default/custom method
-        return frameworks['custom'].inbound.apply(this, [options]);
+        return frameworks['custom'].inbound.apply(this, [policy, options]);
+    }else{
+        throw new Error("A Framework And/Or Policy is required.");
     }
 }
+
+blackwall.prototype.rules = rules;
 
 module.exports = blackwall;

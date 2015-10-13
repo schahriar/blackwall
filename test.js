@@ -4,37 +4,16 @@ var inspect = require("util").inspect;
 var http = require('http');
 var net = require('net');
 var express = require('express');
+var async = require('async');
+
+// NodeJS 0.10.x
+http.globalAgent.maxSockets = Infinity;
 
 var _ = require("lodash");
 var ipaddr = require('ipaddr.js');
-var moment = require('moment');
 
 var should = chai.should();
 var expect = chai.expect;
-
-var firewall = new BlackWall();
-var policy = firewall.addPolicy('test', [{
-    name: 'rateLimiter',
-    description: 'Limits Session Rate based on hits per hour|minute|second',
-    func: function(options, local, callback){
-        if(local.totalHits >= options.get('rate.max')) {
-            callback("Max Number Of Hits Reached");
-        }else{
-            local.totalHits = (local.totalHits)?local.totalHits+1:1;
-            callback(null, true);
-        }
-        // Possibly a better way than storing multiple Date Objects
-        setTimeout(function(){
-            local.totalHits = (local.totalHits)?local.totalHits-1:1;
-        }, 1000);
-    }
-}], {
-    rate: {
-        max: 10
-    }
-});
-
-if(policy.constructor === Error) throw policy;
 
 var ipv6 = {
     valid: "2001:0db8::0001",
@@ -45,17 +24,45 @@ var ipv6 = {
 
 
 var ipv4 = {
-    loop: function(i) {
-        return "188.88." + Math.floor(i/255) + "." + i%255;
-    }
+    loop: function (i) {
+        return "188." + Math.floor(i / (255 * 255)) % 255 + "." + Math.floor(i / 255) % 255 + "." + i % 255;
+    },
+    blocked: "192.0.2.0",
+    blockedRange: "10.53.66.200",
+    allowed: "10.0.0.5",
+    allowedRange: "14.255.9.255",
+    valid: "198.51.100.0",
+    invalid: "10.256.0.0"
 }
+
+var firewall = new BlackWall();
+var policy = firewall.policy('test', [firewall.rules.blacklist, firewall.rules.rateLimiter], {
+    rate: {
+        s: 10,
+        m: 600,
+        h: 3000
+    },
+    blacklist: {
+        address: [ipv4.blocked],
+        range: ['10.0.0.0/8']
+    }
+});
+
+var whitelistpolicy = firewall.policy('whitelist', [firewall.rules.whitelist, firewall.rules.rateLimiter], {
+    whitelist: {
+        address: [ipv4.allowed],
+        range: ['14.0.0.0/8']
+    }
+});
+
+if (policy.constructor === Error) throw policy;
 
 /// Express Server
 var app = express();
 
 // Allow ip address spoofing for testing purposes
-app.use(function(req,res,next) {
-    if(req.query.address) req.overrideip = (req.query.address);
+app.use(function (req, res, next) {
+    if (req.query.address) req.overrideip = (req.query.address);
     next();
 })
 
@@ -67,58 +74,75 @@ app.listen(3000);
 ///
 
 /// TCP Server
-/*var server = net.createServer(function(socket) {
-    firewall.enforce()(
+var server = net.createServer(function (socket) {
+    firewall.enforce(policy)(
         socket.remoteAddress,
-        function() { socket.end("FIREWALL"); },
-        function() { socket.write('connected'); }
-    )
+        function () { socket.end("FIREWALL"); },
+        function () { socket.write('connected'); }
+        )
 });
-server.listen(3100);*/
+server.listen(3100);
 ///
 
-describe('BlackWall Test Suite', function(){
-    describe('Session & Member management checks', function(){
-        it('should add member to specified list', function(){
+describe('BlackWall Test Suite', function () {
+    this.timeout(60000)
+    describe('Session & Member management checks', function () {
+        it('should add member to specified list', function (done) {
             var session = firewall.session(ipv6.expanded, {
                 ip: ipv6.expanded
             })
             // Add member
-            firewall.assign(session, policy);
-            // Check for member
-            expect(policy.bloc.members[ipv6.expanded]).to.be.an('Object');
+            firewall.assign(session, policy, function (error, member) {
+                if (error) throw error;
+                expect(member).to.be.an('Object');
+                // Check for member
+                policy.bloc.members.get(ipv6.expanded, function (error, member) {
+                    if (error) throw error;
+                    expect(member).to.be.an('Object');
+                    done();
+                });
+            });
         })
-        it('should allow mass member additions (3000 ipv4s)', function(){
+        it('should allow mass member additions (3000 ipv4s)', function () {
             // Vulnerable to DoS attacks | Use a database store or some other method to store sessions //
             // Add 3000 members
-            for(i=0; i<3000; i++) {
-                firewall.assign(firewall.session(ipv4.loop(i), { ip: ipv4.loop(i) }), policy);
+            var ParallelExecutionArray = [];
+            for (i = 0; i < 3000; i++) {
+                var ip = ipv4.loop(i);
+                (function (ip) {
+                    ParallelExecutionArray.push(function (callback) {
+                        firewall.assign(firewall.session(ip, { ip: ip }), policy, callback);
+                    })
+                })(ip)
             }
-            // Check for member
-            expect(Object.keys(policy.bloc.members).length).to.be.at.least(3000);
+            async.parallel(ParallelExecutionArray, function (error, results) {
+                // Check for members' length
+                policy.bloc.members.length(function (error, length) {
+                    expect(results.length).to.be.at.least(3000);
+                })
+            });
         })
-        it('should allow mass member removals (2995 ipv4s)', function(){
+        it.skip('should allow mass member removals (2995 ipv4s)', function (done) {
             // Remove 2995 members
-            var count = 0;
-            _.each(policy.bloc.members, function(member) {
-                if(count>2995) return false;
-                count++;
-                policy.bloc.remove(member);
+            policy.bloc.members.list(function (error, keys) {
+                if (error) throw error;
+                
+                done();
             })
-            // Clean Keys
-            policy.bloc.clean();
-            // Check for member
-            expect(Object.keys(policy.bloc.members).length).to.be.below(20);
         })
-        it('should expand ipv6 members when added to specified list', function(){
+        it('should expand ipv6 members when added to specified list', function () {
             // Add member
             var session = firewall.session(ipv6.valid, { ip: ipv6.valid });
             // Assign To Policy
-            firewall.assign(session, policy);
-            // Check for member
-            expect(policy.bloc.members[ipv6.expanded]).to.be.an('Object');
+            firewall.assign(session, policy, function (error, member) {
+                expect(member.id).to.equal(ipv6.expanded);
+                // Check for member
+                policy.bloc.members.get(ipv6.expanded, function (error, member) {
+                    expect(member).to.be.an('Object');
+                })
+            });
         })
-        it('should return an error when sessions are assigned to non-existent policy', function(){
+        it('should return an error when sessions are assigned to non-existent policy', function () {
             // Add member
             var session = firewall.session(ipv6.validAlt, { ip: ipv6.validAlt });
             // Assign
@@ -127,84 +151,104 @@ describe('BlackWall Test Suite', function(){
         })
     })
 
-    describe('ExpressJS firewall checks', function(){
+    describe('Framework checks', function () {
         this.timeout(5000);
-        it('should allow on first call', function(done){
+        it('should run Express', function (done) {
             http.get('http://localhost:3000', function (res) {
                 res.statusCode.should.equal(200);
                 done();
             });
         })
-        
-        it('should deny over 10 calls a second [defined rule]', function(done){
-            for(i=0; i<10; i++) http.get('http://localhost:3000');
+        it('should run Custom Framework', function (done) {
+            net.connect({ port: 3100 }).on('data', function (data) {
+                data.toString().should.equal('connected');
+                done();
+            })
+        })
+    });
+});
+
+describe('Predefined Rules Test Suite', function () {
+    this.timeout(5000);
+    describe('RateLimiter', function () {
+        it('should allow initial connection', function (done) {
+            http.get('http://localhost:3000', function (res) {
+                res.statusCode.should.equal(200);
+                done();
+            });
+        })
+        it('should ignore if more than 10 connections are made within a second', function (done) {
+            for (i = 0; i < 10; i++) http.get('http://localhost:3000');
             http.get('http://localhost:3000', function (res) {
                 res.statusCode.should.equal(503);
                 done();
             });
         })
-        it('should allow < 10 calls after a second', function(done){
-            setTimeout(function(){
-                for(i=0; i<4; i++) http.get('http://localhost:3000');
+        it('should allow < 10 calls after a second', function (done) {
+            setTimeout(function () {
+                for (i = 0; i < 4; i++) http.get('http://localhost:3000');
                 http.get('http://localhost:3000', function (res) {
                     res.statusCode.should.equal(200);
                     done();
                 });
             }, 1200);
         })
-    });
-
-/* describe('TCP firewall checks', function(){
-        this.timeout(10000);
-        it('should allow on first call', function(done){
-            net.connect({port: 3100}).on('data', function(data) {
-                data.toString().should.equal('connected');
-                done();
-            })
-        })
-        it('should deny over 10 calls a second [defined rule]', function(done){
-            for(c=0; c<10; c++) net.connect({port: 3100});
-            net.connect({port: 3100}).on('close', function(had_error) {
-                expect(had_error).to.be.false;
-                done();
-            })
-        })
-        it('should allow < 10 calls after a second', function(done){
-            setTimeout(function(){
-                for(i=0; i<4; i++) net.connect({port: 3100});
-                net.connect({port: 3100}).on('data', function(data) {
-                    data.toString().should.equal('connected');
-                    done();
-                })
-            }, 1200);
-        })
-    });*/
-
-    /*describe('Whitelist ip firewall checks', function(){
-        this.timeout(5000);
-        it('should allow on first call', function(done){
-            http.get('http://localhost:3000/?address=240.24.24.24', function (res) {
-                res.statusCode.should.equal(200);
-                done();
-            });
-        })
-        it('should not allow after whitelisting', function(done){
-            // Create a whitelist
-            firewall.addList("whitelist", rules.whitelist, 1, false);
-
-            http.get('http://localhost:3000/?address=240.24.24.24', function (res) {
+    })
+    describe('Blacklist', function () {
+        it('should block a blacklisted ip', function (done) {
+            http.get('http://localhost:3000?address=' + ipv4.blocked, function (res) {
                 res.statusCode.should.equal(503);
                 done();
             });
         })
-        it('should allow listed members after whitelisting', function(done){
-            // Whitelist 240.24.24.200 only
-            firewall.addMember("whitelist", "240.24.24.200");
-
-            http.get('http://localhost:3000/?address=240.24.24.200', function (res) {
+        it('should allow a normal ip', function (done) {
+            http.get('http://localhost:3000?address=' + ipv4.valid, function (res) {
                 res.statusCode.should.equal(200);
                 done();
             });
         })
-    });*/
-});
+        it('should block an ip from a blacklisted range', function (done) {
+            http.get('http://localhost:3000?address=' + ipv4.blockedRange, function (res) {
+                res.statusCode.should.equal(503);
+                done();
+            });
+        })
+    })
+    describe('Whitelist', function () {
+        it('*should swap policies', function () {
+            expect(policy.swap(whitelistpolicy).name).to.equal(whitelistpolicy.name);
+            expect(policy.swap(whitelistpolicy).rules).to.deep.equal(whitelistpolicy.rules);
+            expect(policy.swap(whitelistpolicy).options).to.deep.equal(whitelistpolicy.options);
+        })
+        it('should block a non-whitelisted ip', function (done) {
+            http.get('http://localhost:3000?address=' + ipv4.valid, function (res) {
+                res.statusCode.should.equal(503);
+                done();
+            });
+        })
+        it('should allow a whitelisted ip', function (done) {
+            http.get('http://localhost:3000?address=' + ipv4.allowed, function (res) {
+                res.statusCode.should.equal(200);
+                done();
+            });
+        })
+        it('should allow a whitelisted range', function (done) {
+            http.get('http://localhost:3000?address=' + ipv4.allowedRange, function (res) {
+                res.statusCode.should.equal(200);
+                done();
+            });
+        })
+        it('should block an invalid ipv4', function (done) {
+            http.get('http://localhost:3000?address=' + ipv4.invalid, function (res) {
+                res.statusCode.should.equal(503);
+                done();
+            });
+        })
+        it('should block an invalid ipv6', function (done) {
+            http.get('http://localhost:3000?address=' + ipv6.invalid, function (res) {
+                res.statusCode.should.equal(503);
+                done();
+            });
+        })
+    })
+})

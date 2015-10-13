@@ -1,6 +1,6 @@
 {
   "name": "blackwall",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A programmable firewall for NodeJS",
   "main": "blackwall.js",
   "scripts": {
@@ -26,9 +26,8 @@
   "homepage": "https://github.com/schahriar/blackwall",
   "dependencies": {
     "async": "^0.9.0",
-    "ipaddr.js": "^0.1.8",
-    "lodash": "^3.3.1",
-    "moment": "^2.9.0"
+    "ipaddr.js": "^1.0.3",
+    "lodash": "^3.3.1"
   },
   "devDependencies": {
     "chai": "^2.1.0",
