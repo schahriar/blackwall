@@ -9,45 +9,25 @@ Currently included in the *Beta* version:
 
 1. Session handling
 2. ipv4 & ipv6 support
-1. Custom Rules (as functions with their own storage)
-4. Frameworks (Ready to Use ExpressJS Framework)
+3. Predefined Rules (Whitelist, Blacklist, RateLimiter)
+4. Async Storage (capable of using a Database)
+5. Custom Rules (as functions with their own storage)
+6. Frameworks (Ready to Use ExpressJS Framework)
 
 # Usage
 ```
 npm install blackwall
 ```
 
-Enabling **blackwall** on an Express server with defined rules:
+Enabling **blackwall** on an Express server with predefined rules:
 ```javascript
 var express = require("express");
 var blackwall = require("blackwall");
 
 // Create a new instance of blackwall
 var firewall = new blackwall();
-// Create a new Policy with a single rule to limit connections from each Client to 20 per minute
-var policy = firewall.policy('policy_name', [
-    {
-        name: 'SimpleRateLimiter',
-        description: 'Limits Session Rate based on hits per minute. Use ratelimiter rule for production.',
-        func: function(options, local, callback){
-            options.get('rate', function(error, rate) {
-                if(error) callback(error);
-                // Don't Force Rule if Rate option is not set
-                if(!rate) callback(null, true);
-                if(local.total >= rate.m) {
-                    callback("Max Number Of Hits Reached");
-                }else{
-                    local.total = (local.total)?local.total+1:1;
-                    callback(null, true);
-                }
-                // Possibly a better way than storing multiple Date Objects
-                setTimeout(function(){
-                    local.total = (local.total)?local.total-1:1;
-                }, 60000);
-            })
-        }
-    }
-], {
+// Create a new Policy from the predefined policy 'rateLimier' with a single rule to limit connections from every Client to 20 per minute
+var policy = firewall.policy('policy_name', [rateLimiter], {
     rate: {
         m: 20
     }
@@ -95,10 +75,18 @@ var policy = firewall.policy('name', [
         description: 'logs the total number of sessions from the client every time a new session is created',
         group: 'counters',
         func: function(options, local, counters, callback) {
-            counters.totalSessions = (counters.totalSessions)?counters.totalSessions+1:1;
-            if(!local.totalNumberOfSessions) local.totalNumberOfSessions = 0;
-            local.totalNumberOfSessions++;
-            console.log("TOTAL SESSIONS FROM", this.id, local.totalNumberOfSessions);
+            counters.get('totalSessions', function(error, totalSessions) {
+                if(error) return callback(error);
+                totalSessions = (totalSessions)?totalSessions+1:1;
+                
+            })
+            // Update Total Sessions in Database
+            counters.set('totalSessions', totalSessions, function() {
+                // Let the Session Through
+                callback(null);
+                // Log Total Sessions
+                console.log("TOTAL SESSIONS FROM", this.id, totalSessions);
+            });
         }
     }
 ])
@@ -110,6 +98,9 @@ var policy = firewall.policy('name', [
 // TOTAL SESSIONS FROM 127.0.0.1 4
 // ...
 ```
+
+# Storage
+Handling storage for tens of thousands of sessions using javascript objects can not only be slow but also fatal. This is why Blackwall is equipped with an async storage method which can be replaced with a custom database implementation... [To read more about this read STORAGE.md](./STORAGE.md)
 
 # Frameworks
 Frameworks are modules that return a function that enables **blackwall** integration to 3rd-party systems. Currently **blackwall** is packaged with:
@@ -152,6 +143,9 @@ You can test **blackwall** using the Mocha module. This includes express and TCP
 ```javascript
 npm test
 ```
+
+# Contributing
+Features and pull requests are welcomed. If you happen to write a predefined rule make sure it is accompanied by a specific test in *test.js* in Predefined Rules section.
 
 # License
 Who doesn't love [MIT license](https://raw.githubusercontent.com/schahriar/blackwall/master/LICENSE)?
